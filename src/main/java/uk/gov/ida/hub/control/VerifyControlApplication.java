@@ -3,6 +3,7 @@ package uk.gov.ida.hub.control;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import uk.gov.ida.hub.control.resources.SessionResource;
 
 public class VerifyControlApplication extends Application<VerifyControlConfiguration> {
 
@@ -23,7 +24,8 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
     @Override
     public void run(final VerifyControlConfiguration configuration,
                     final Environment environment) {
-        // TODO: implement application
+        var sessionResource = new SessionResource();
+        environment.jersey().register(sessionResource);
     }
 
 }
