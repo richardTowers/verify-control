@@ -20,10 +20,20 @@ A reimplementation of [alphagov/verify-hub#policy](https://github.com/alphagov/v
 ### In scope initially:
 
 * All API endpoints should respond correctly
-* Legal / Illegal state transitions should be handled
-* High availability
+* User-facing behaviour should be identical to Policy
+* Legal / Illegal state transitions should behave as they do in Policy
+* Should support high availability (i.e. more than one instance running)
 
-### Out of scope initially:
+### Out of scope initially, but required for a working service:
 
-* Reporting events to event sink (to be implemented later)
-* Exact replication of Policy's states (although the user-facing behaviour should be preserved)
+* Reporting events to event sink
+
+### Not implemented, of questionable value:
+
+* Validating `assertionConsumerService` against a list of allowed URLs - this feature has no obvious value
+* `forceAuthentication` - not clear if any of the services use this or if it's properly implemented
+* Caching values for configuration in the session (e.g. `transactionSupportsEidas` - we can just look this up when we need it - should we bother keeping it in session?)
+
+### No plans to implement:
+
+* Exact replication of Policy's states
