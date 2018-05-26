@@ -3,17 +3,16 @@ package uk.gov.ida.hub.control;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
-import uk.gov.ida.hub.control.configuration.RedisConfiguration;
 
 public class VerifyControlConfiguration extends Configuration {
-    private final RedisConfiguration redis;
+    private final String redisUrl;
 
     @JsonCreator
-    public VerifyControlConfiguration(@JsonProperty("redis") RedisConfiguration redis) {
-        this.redis = redis;
+    public VerifyControlConfiguration(@JsonProperty("redis") String redisUrl) {
+        this.redisUrl = redisUrl;
     }
 
-    public RedisConfiguration getRedis() {
-        return redis;
+    public String getRedisUrl() {
+        return redisUrl;
     }
 }

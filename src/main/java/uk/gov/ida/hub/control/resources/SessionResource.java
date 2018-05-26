@@ -1,8 +1,8 @@
 package uk.gov.ida.hub.control.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import redis.clients.jedis.Jedis;
-import uk.gov.ida.hub.control.configuration.RedisConfiguration;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.sync.RedisCommands;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -15,11 +15,12 @@ import java.util.UUID;
 @Path("/policy/session")
 @Produces(MediaType.APPLICATION_JSON)
 public class SessionResource {
+    private final RedisCommands<String, String> redisClient;
 
-    private final Jedis redisClient;
-
-    public SessionResource(RedisConfiguration redisConfiguration) {
-        this.redisClient = new Jedis(redisConfiguration.getHost(), redisConfiguration.getPort());
+    public SessionResource(String redisUrl) {
+        this.redisClient = RedisClient
+            .create(redisUrl)
+            .connect().sync();
     }
 
     @POST

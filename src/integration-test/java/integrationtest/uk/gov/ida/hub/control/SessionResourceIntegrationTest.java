@@ -3,10 +3,11 @@ package integrationtest.uk.gov.ida.hub.control;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.sync.RedisCommands;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import redis.clients.jedis.Jedis;
 import redis.embedded.RedisCluster;
 import uk.gov.ida.hub.control.VerifyControlApplication;
 import uk.gov.ida.hub.control.VerifyControlConfiguration;
@@ -21,7 +22,7 @@ public class SessionResourceIntegrationTest {
 
     private static RedisCluster redisCluster;
     private static DropwizardTestSupport<VerifyControlConfiguration> verifyControl;
-    private static Jedis redisClient;
+    private static RedisCommands<String, String> redisClient;
     private static Client httpClient;
 
     @BeforeClass
@@ -29,14 +30,13 @@ public class SessionResourceIntegrationTest {
         redisCluster = RedisCluster.builder().ephemeral().replicationGroup("master", 1).build();
         redisCluster.start();
 
-        var redisPort = redisCluster.serverPorts().get(0);
-        redisClient = new Jedis("localhost", redisPort);
+        var redisUrl = String.format("redis://localhost:%d", redisCluster.serverPorts().get(0));
+        redisClient = RedisClient.create(redisUrl).connect().sync();
 
         verifyControl = new DropwizardTestSupport<>(
             VerifyControlApplication.class,
             "config.yml",
-            ConfigOverride.config("redis.host", "localhost"),
-            ConfigOverride.config("redis.port", Integer.toString(redisPort, 10))
+            ConfigOverride.config("redisUrl", redisUrl)
         );
         verifyControl.before();
 

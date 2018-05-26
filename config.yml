@@ -3,6 +3,4 @@ logging:
   loggers:
     uk.gov.ida: DEBUG
 
-redis:
-  host: localhost
-  port: 4567
+redisUrl: "redis://localhost:4567"
