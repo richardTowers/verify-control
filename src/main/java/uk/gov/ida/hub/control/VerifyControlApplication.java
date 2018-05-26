@@ -24,7 +24,7 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
     @Override
     public void run(final VerifyControlConfiguration configuration,
                     final Environment environment) {
-        var sessionResource = new SessionResource();
+        var sessionResource = new SessionResource(configuration.getRedis());
         environment.jersey().register(sessionResource);
     }
 
