@@ -4,3 +4,4 @@ logging:
     uk.gov.ida: DEBUG
 
 redisUrl: "redis://localhost:4567"
+samlEngineUrl: "http://localhost:50120"

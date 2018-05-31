@@ -1,8 +1,10 @@
 package uk.gov.ida.hub.control;
 
 import io.dropwizard.Application;
+import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import uk.gov.ida.hub.control.factories.ResourceFactory;
 import uk.gov.ida.hub.control.resources.SessionResource;
 
 public class VerifyControlApplication extends Application<VerifyControlConfiguration> {
@@ -24,8 +26,8 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
     @Override
     public void run(final VerifyControlConfiguration configuration,
                     final Environment environment) {
-        var sessionResource = new SessionResource(configuration.getRedisUrl());
-        environment.jersey().register(sessionResource);
+        var resourceFactory = new ResourceFactory(configuration, environment);
+        environment.jersey().register(resourceFactory.createSessionResource());
     }
 
 }
