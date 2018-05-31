@@ -1,6 +1,8 @@
 Verify Control
 ==============
 
+[![Build Status](https://travis-ci.org/richardTowers/verify-control.svg?branch=master)](https://travis-ci.org/richardTowers/verify-control)
+
 ![Photo of Control from "The Spy Who Came In From The Cold"](images/control.jpg)
 
 > Thus we do disagreeable things, but we are *defensive*. That, I think, is still fair.
