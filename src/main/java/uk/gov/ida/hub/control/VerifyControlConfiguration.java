@@ -8,11 +8,11 @@ public class VerifyControlConfiguration extends Configuration {
     private final String redisUrl;
 
     @JsonCreator
-    public VerifyControlConfiguration(@JsonProperty("redis") String redisUrl) {
+    public VerifyControlConfiguration(@JsonProperty("redisUrl") String redisUrl) {
         this.redisUrl = redisUrl;
     }
 
-    public String getRedisUrl() {
+    String getRedisUrl() {
         return redisUrl;
     }
 }
