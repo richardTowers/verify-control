@@ -16,7 +16,7 @@ public class ResourceFactory {
         this.environment = environment;
     }
 
-    public SessionResource createSessionResource() {
+    public SessionResource createSessionResource() throws InterruptedException {
         var client = new JerseyClientBuilder(environment).build(SessionResource.class.getSimpleName());
         var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
         return new SessionResource(configuration.getRedisUrl(), samlEngineTarget);

@@ -25,7 +25,7 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
 
     @Override
     public void run(final VerifyControlConfiguration configuration,
-                    final Environment environment) {
+                    final Environment environment) throws InterruptedException {
         var resourceFactory = new ResourceFactory(configuration, environment);
         var jersey = environment.jersey();
 

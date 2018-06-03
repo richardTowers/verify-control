@@ -26,6 +26,7 @@ import static org.joda.time.DateTime.now;
 import static org.joda.time.DateTimeZone.UTC;
 import static org.joda.time.format.ISODateTimeFormat.dateTime;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
+import static uk.gov.ida.hub.control.helpers.ExponentiallyBackingOffRedisConnector.connectToRedis;
 
 @Path("/policy/session")
 @Produces(MediaType.APPLICATION_JSON)
@@ -33,10 +34,10 @@ public class SessionResource {
     private final RedisCommands<String, String> redisClient;
     private final WebTarget samlEngineWebTarget;
 
-    public SessionResource(String redisUrl, WebTarget samlEngineWebTarget) {
-        this.redisClient = RedisClient
-            .create(redisUrl)
-            .connect().sync();
+
+    public SessionResource(String redisUrl, WebTarget samlEngineWebTarget) throws InterruptedException {
+        RedisClient redisClient = RedisClient.create(redisUrl);
+        this.redisClient = connectToRedis(redisClient);
         this.samlEngineWebTarget = samlEngineWebTarget;
     }
 

@@ -1,7 +1,7 @@
 logging:
   level: INFO
   loggers:
-    uk.gov.ida: DEBUG
+    uk.gov.ida: INFO
 
 redisUrl: "redis://localhost:4567"
 samlEngineUrl: "http://localhost:50120"
