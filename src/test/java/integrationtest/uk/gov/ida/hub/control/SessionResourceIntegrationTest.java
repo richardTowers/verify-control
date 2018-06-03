@@ -1,6 +1,8 @@
 package integrationtest.uk.gov.ida.hub.control;
 
 import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrationTest;
+import org.apache.commons.lang3.NotImplementedException;
+import org.junit.Ignore;
 import org.junit.Test;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 
@@ -46,10 +48,77 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         var response = createASession(new AuthnRequest(null, null, null));
         assertThat(response.getStatus()).isEqualTo(422);
     }
+
     @Test
     public void shouldValidateMissingCreateSessionBody() {
         var response = createASession(null);
         assertThat(response.getStatus()).isEqualTo(422);
+    }
+
+    @Ignore
+    @Test
+    public void shouldReturnBadRequestWhenAssertionConsumerIndexIsInvalid() {
+        throw new NotImplementedException("Test shouldReturnBadRequestWhenAssertionConsumerIndexIsInvalid has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldReturnInvalidSamlExceptionWhenSamlEngineThrowsInvalidSamlException() {
+        throw new NotImplementedException("Test shouldReturnInvalidSamlExceptionWhenSamlEngineThrowsInvalidSamlException has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void getSessionShouldFailWhenSessionDoesNotExist() {
+        throw new NotImplementedException("Test getSessionShouldFailWhenSessionDoesNotExist has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnSignIn() {
+        throw new NotImplementedException("Test shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnSignIn has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnRegistration() {
+        throw new NotImplementedException("Test shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnRegistration has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldReturnNotFoundWhenSessionDoesNotExistInPolicy() {
+        throw new NotImplementedException("Test shouldReturnNotFoundWhenSessionDoesNotExistInPolicy has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldGetRpResponseGivenASessionExistsInPolicy() {
+        throw new NotImplementedException("Test shouldGetRpResponseGivenASessionExistsInPolicy has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldGetRpResponseGivenASessionInEidasSuccessfulMatchStateExists() {
+        throw new NotImplementedException("Test shouldGetRpResponseGivenASessionInEidasSuccessfulMatchStateExists has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void shouldUpdateSessionStateAndSendAnAttributeQueryRequestWhenASuccessResponseIsReceivedFromIdp() {
+        throw new NotImplementedException("Test shouldUpdateSessionStateAndSendAnAttributeQueryRequestWhenASuccessResponseIsReceivedFromIdp has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void selectIdpShouldReturnErrorWhenSessionHasTimedOut() {
+        throw new NotImplementedException("Test selectIdpShouldReturnErrorWhenSessionHasTimedOut has not been implemented");
+    }
+
+    @Ignore
+    @Test
+    public void selectIdpShouldReturnErrorWhenSessionDoesNotExistInPolicy() {
+        throw new NotImplementedException("Test selectIdpShouldReturnErrorWhenSessionDoesNotExistInPolicy has not been implemented");
     }
 
     private Response createASession(AuthnRequest authnRequest) {
