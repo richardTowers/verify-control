@@ -106,17 +106,6 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         throw new NotImplementedException("Test shouldGetRpResponseGivenASessionExistsInPolicy has not been implemented");
     }
 
-    @Ignore
-    @Test
-    public void shouldGetRpResponseGivenASessionInEidasSuccessfulMatchStateExists() {
-        throw new NotImplementedException("Test shouldGetRpResponseGivenASessionInEidasSuccessfulMatchStateExists has not been implemented");
-    }
-
-    @Test
-    public void selectIdpShouldReturnErrorWhenSessionDoesNotExistInPolicy() {
-        throw new NotImplementedException("Test selectIdpShouldReturnErrorWhenSessionDoesNotExistInPolicy has not been implemented");
-    }
-
     private Response createASession(AuthnRequest authnRequest) {
         var url = String.format("http://localhost:%s/policy/session", verifyControl.getLocalPort());
         return httpClient

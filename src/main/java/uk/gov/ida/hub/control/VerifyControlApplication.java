@@ -5,6 +5,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.factories.ResourceFactory;
+import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
 
 public class VerifyControlApplication extends Application<VerifyControlConfiguration> {
 
@@ -26,8 +27,14 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
     public void run(final VerifyControlConfiguration configuration,
                     final Environment environment) {
         var resourceFactory = new ResourceFactory(configuration, environment);
-        environment.jersey().register(resourceFactory.createSessionResource());
-        environment.jersey().register(new SessionNotFoundException.Mapper());
+        var jersey = environment.jersey();
+
+        // Resources
+        jersey.register(resourceFactory.createSessionResource());
+        jersey.register(new AuthnRequestFromTransactionResource());
+
+        // Exception Mappers
+        jersey.register(new SessionNotFoundException.Mapper());
     }
 
 }
