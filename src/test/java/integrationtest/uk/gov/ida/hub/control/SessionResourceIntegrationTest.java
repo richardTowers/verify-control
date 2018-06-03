@@ -20,7 +20,7 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
     public void shouldCreateSession() {
         configureFor(samlEnginePort());
         stubFor(
-            post(urlEqualTo("/translate-rp-authn-request")).willReturn(
+            post(urlEqualTo("/saml-engine/translate-rp-authn-request")).willReturn(
                 aResponse()
                     .withHeader("Content-Type", MediaType.APPLICATION_JSON)
                     .withBody("{\"issuer\":\"some-issuer\",\"requestId\":\"some-request-id\"}")
@@ -82,16 +82,47 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         assertThat(responseBody.get("audited")).isEqualTo(false);
     }
 
-    @Ignore
     @Test
     public void shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnSignIn() {
-        throw new NotImplementedException("Test shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnSignIn has not been implemented");
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/saml-engine/generate-idp-authn-request"))
+                .withRequestBody(matchingJsonPath("idpEntityId", equalTo("https://some-idp-entity-id")))
+                .withRequestBody(matchingJsonPath("levelsOfAssurance[0]", equalTo("LEVEL_1")))
+                .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", MediaType.APPLICATION_JSON)
+                    .withBody("{\"samlRequest\":\"some-saml-request\",\"ssoUri\":\"https://some-sso-uri\"}")
+            )
+        );
+        var response = generateIdpAuthnRequest("some-session-id");
+        assertThat(response.getStatus()).isEqualTo(200);
+        var responseBody = response.readEntity(new GenericType<Map<String, Object>>() {});
+        assertThat(responseBody.get("samlRequest")).isEqualTo("some-saml-request");
+        assertThat(responseBody.get("postEndpoint")).isEqualTo("https://some-sso-uri");
+        assertThat(responseBody.get("registering")).isEqualTo(false);
     }
 
-    @Ignore
+    @Ignore("Can't make this pass without implementing some statefulness :)")
     @Test
     public void shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnRegistration() {
-        throw new NotImplementedException("Test shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnRegistration has not been implemented");
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/saml-engine/generate-idp-authn-request"))
+                .withRequestBody(matchingJsonPath("idpEntityId", equalTo("https://some-idp-entity-id")))
+                .withRequestBody(matchingJsonPath("levelsOfAssurance[0]", equalTo("LEVEL_1")))
+                .willReturn(
+                  aResponse()
+                    .withHeader("Content-Type", MediaType.APPLICATION_JSON)
+                    .withBody("{\"samlRequest\":\"some-saml-request\",\"ssoUri\":\"https://some-sso-uri\"}")
+                )
+        );
+        var response = generateIdpAuthnRequest("some-session-id");
+        assertThat(response.getStatus()).isEqualTo(200);
+        var responseBody = response.readEntity(new GenericType<Map<String, Object>>() {});
+        assertThat(responseBody.get("samlRequest")).isEqualTo("some-saml-request");
+        assertThat(responseBody.get("postEndpoint")).isEqualTo("https://some-sso-uri");
+        assertThat(responseBody.get("registering")).isEqualTo(true);
     }
 
     @Ignore
@@ -121,4 +152,13 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
             .request(MediaType.APPLICATION_JSON_TYPE)
             .get();
     }
+
+    private Response generateIdpAuthnRequest(String sessionId) {
+        var url = String.format("http://localhost:%d/policy/session/%s/idp-authn-request-from-hub", verifyControl.getLocalPort(), sessionId);
+        return httpClient
+            .target(url)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .get();
+    }
+
 }

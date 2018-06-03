@@ -1,7 +1,7 @@
 Verify Control
 ==============
 
-![8% Done](http://progressed.io/bar/8)
+![10% Done](http://progressed.io/bar/10)
 [![Build Status](https://travis-ci.org/richardTowers/verify-control.svg?branch=master)](https://travis-ci.org/richardTowers/verify-control)
 
 ![Photo of Control from "The Spy Who Came In From The Cold"](images/control.jpg)
