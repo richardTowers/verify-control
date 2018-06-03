@@ -4,7 +4,11 @@ Verify Control
 ![10% Done](http://progressed.io/bar/10)
 [![Build Status](https://travis-ci.org/richardTowers/verify-control.svg?branch=master)](https://travis-ci.org/richardTowers/verify-control)
 
+<a href=https://youtu.be/NmmWkJtuxz4>
+    
 ![Cyril Cusack playing Control in the 1965 film "The Spy Who Came In From The Cold"](images/control.jpg)
+
+</a>
 
 > Thus we do disagreeable things, but we are *defensive*. That, I think, is still fair.
 
