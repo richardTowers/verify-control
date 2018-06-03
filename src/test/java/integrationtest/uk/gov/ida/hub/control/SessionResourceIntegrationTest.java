@@ -8,11 +8,21 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SessionResourceIntegrationTest extends BaseVerifyControlIntegrationTest {
     @Test
     public void shouldCreateSession() {
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/translate-rp-authn-request")).willReturn(
+                aResponse()
+                    .withHeader("Content-Type", MediaType.APPLICATION_JSON)
+                    .withBody("{\"issuer\":\"some-issuer\",\"requestId\":\"some-request-id\"}")
+            )
+        );
+
         var response = createASession(
             new AuthnRequest(
                 "some-saml-request",
@@ -25,8 +35,8 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
 
         var session = redisClient.hgetall("session:" + sessionId);
         assertThat(session.get("start")).isNotBlank();
-        assertThat(session.get("issuer")).isEqualTo("TODO: issuer");
-        assertThat(session.get("requestId")).isEqualTo("TODO: requestId");
+        assertThat(session.get("issuer")).isEqualTo("some-issuer");
+        assertThat(session.get("requestId")).isEqualTo("some-request-id");
         assertThat(session.get("relayState")).isEqualTo("some-relay-state");
         assertThat(session.get("ipAddress")).isEqualTo("some-ip-address");
     }
