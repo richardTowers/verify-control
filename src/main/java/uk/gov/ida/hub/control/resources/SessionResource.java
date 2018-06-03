@@ -4,13 +4,11 @@ import com.codahale.metrics.annotation.Timed;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.api.AuthnRequest;
+import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -40,7 +38,7 @@ public class SessionResource {
     }
 
     @POST
-    @Consumes
+    @Consumes(MediaType.APPLICATION_JSON)
     @Timed
     public Response createSession(@Valid @NotNull AuthnRequest authnRequest) {
         var sessionId = UUID.randomUUID().toString();
@@ -59,5 +57,11 @@ public class SessionResource {
         redisClient.hmset("session:" + sessionId, session);
 
         return created(null).entity(sessionId).build();
+    }
+
+    @GET
+    @Path("/{sessionId}")
+    public Response getSession(@PathParam("sessionId") @NotNull String sessionId) throws SessionNotFoundException {
+        throw new SessionNotFoundException(sessionId);
     }
 }

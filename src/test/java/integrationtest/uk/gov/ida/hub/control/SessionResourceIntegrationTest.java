@@ -7,11 +7,15 @@ import org.junit.Test;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.util.Map;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 public class SessionResourceIntegrationTest extends BaseVerifyControlIntegrationTest {
     @Test
@@ -55,10 +59,11 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         assertThat(response.getStatus()).isEqualTo(422);
     }
 
-    @Ignore
     @Test
     public void shouldReturnBadRequestWhenAssertionConsumerIndexIsInvalid() {
-        throw new NotImplementedException("Test shouldReturnBadRequestWhenAssertionConsumerIndexIsInvalid has not been implemented");
+        // Deliberately not implementing lookup of assertionConsumerService URLs in config.
+        // This feature doesn't seem to be valuable enough to make up for the extra complexity.
+        assertThat("The assertionConsumerService lookup feature").isNotEqualTo("Something we should implement.");
     }
 
     @Ignore
@@ -67,10 +72,16 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         throw new NotImplementedException("Test shouldReturnInvalidSamlExceptionWhenSamlEngineThrowsInvalidSamlException has not been implemented");
     }
 
-    @Ignore
     @Test
     public void getSessionShouldFailWhenSessionDoesNotExist() {
-        throw new NotImplementedException("Test getSessionShouldFailWhenSessionDoesNotExist has not been implemented");
+        var response = getSession("some-non-existent-session-id");
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        var responseBody = response.readEntity(new GenericType<Map<String, Object>>(){});
+        assertThat(responseBody.get("errorId")).isNotNull().isNotEqualTo("");
+        assertThat(responseBody.get("exceptionType")).isEqualTo("SESSION_NOT_FOUND");
+        assertThat(responseBody.get("clientMessage")).isEqualTo("");
+        assertThat(responseBody.get("audited")).isEqualTo(false);
     }
 
     @Ignore
@@ -127,5 +138,13 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
             .target(url)
             .request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(authnRequest, MediaType.APPLICATION_JSON_TYPE));
+    }
+
+    private Response getSession(String sessionId) {
+        var url = String.format("http://localhost:%d/policy/session/%s", verifyControl.getLocalPort(), sessionId);
+        return httpClient
+            .target(url)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .get();
     }
 }
