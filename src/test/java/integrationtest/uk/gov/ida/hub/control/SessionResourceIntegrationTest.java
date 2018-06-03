@@ -10,12 +10,10 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 public class SessionResourceIntegrationTest extends BaseVerifyControlIntegrationTest {
     @Test
@@ -114,19 +112,6 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         throw new NotImplementedException("Test shouldGetRpResponseGivenASessionInEidasSuccessfulMatchStateExists has not been implemented");
     }
 
-    @Ignore
-    @Test
-    public void shouldUpdateSessionStateAndSendAnAttributeQueryRequestWhenASuccessResponseIsReceivedFromIdp() {
-        throw new NotImplementedException("Test shouldUpdateSessionStateAndSendAnAttributeQueryRequestWhenASuccessResponseIsReceivedFromIdp has not been implemented");
-    }
-
-    @Ignore
-    @Test
-    public void selectIdpShouldReturnErrorWhenSessionHasTimedOut() {
-        throw new NotImplementedException("Test selectIdpShouldReturnErrorWhenSessionHasTimedOut has not been implemented");
-    }
-
-    @Ignore
     @Test
     public void selectIdpShouldReturnErrorWhenSessionDoesNotExistInPolicy() {
         throw new NotImplementedException("Test selectIdpShouldReturnErrorWhenSessionDoesNotExistInPolicy has not been implemented");
