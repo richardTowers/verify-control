@@ -4,10 +4,14 @@ import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrati
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Ignore;
 import org.junit.Test;
+import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
@@ -21,6 +25,7 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
 
     @Test
     public void selectIdpShouldReturnSuccessResponseAndAudit() {
+        redisClient.set("state:some-session-id", VerifySessionState.Started.NAME);
         var response = selectIdp("some-session-id", "LEVEL_1", false);
         assertThat(response.getStatus()).isEqualTo(201);
         // TODO: (event sink) This test should check that event sink was called.
@@ -32,10 +37,14 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         throw new NotImplementedException("Test idpSelectedShouldThrowIfIdpIsNotAvailable has not been implemented");
     }
 
-    @Ignore
     @Test
     public void idpSelectedShouldThrowIfSessionInWrongState() {
-        throw new NotImplementedException("Test idpSelectedShouldThrowIfSessionInWrongState has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.Match.NAME);
+        var response = selectIdp("some-session-id", "LEVEL_1", false);
+        assertThat(response.getStatus()).isEqualTo(400);
+        var error = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(error.get("exceptionType")).isEqualTo("STATE_PROCESSING_VALIDATION");
+        assertThat(error.get("clientMessage")).isEqualTo("Invalid transition 'selectIdp' for state 'match'");
     }
 
     @Ignore

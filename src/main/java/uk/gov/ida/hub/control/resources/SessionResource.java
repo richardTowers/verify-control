@@ -3,7 +3,6 @@ package uk.gov.ida.hub.control.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
@@ -11,7 +10,12 @@ import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -26,7 +30,6 @@ import static org.joda.time.DateTime.now;
 import static org.joda.time.DateTimeZone.UTC;
 import static org.joda.time.format.ISODateTimeFormat.dateTime;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
-import static uk.gov.ida.hub.control.helpers.ExponentiallyBackingOffRedisConnector.connectToRedis;
 
 @Path("/policy/session")
 @Produces(MediaType.APPLICATION_JSON)
@@ -35,9 +38,8 @@ public class SessionResource {
     private final WebTarget samlEngineWebTarget;
 
 
-    public SessionResource(String redisUrl, WebTarget samlEngineWebTarget) throws InterruptedException {
-        RedisClient redisClient = RedisClient.create(redisUrl);
-        this.redisClient = connectToRedis(redisClient);
+    public SessionResource(RedisCommands<String, String> redisClient, WebTarget samlEngineWebTarget) throws InterruptedException {
+        this.redisClient = redisClient;
         this.samlEngineWebTarget = samlEngineWebTarget;
     }
 
