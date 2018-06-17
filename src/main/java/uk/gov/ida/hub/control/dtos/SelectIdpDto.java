@@ -4,19 +4,23 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.constraints.NotNull;
+
 public class SelectIdpDto {
     @NotEmpty
     private final String selectedIdpEntityId;
     @NotEmpty
     private final String principalIpAddress;
-    private final boolean registration;
+    @NotNull
+    private final Boolean registration;
+    @NotNull
     private final LevelOfAssurance requestedLoa;
 
     @JsonCreator
     public SelectIdpDto(
         @JsonProperty("selectedIdpEntityId") String selectedIdpEntityId,
         @JsonProperty("principalIpAddress") String principalIpAddress,
-        @JsonProperty("registration") boolean registration,
+        @JsonProperty("registration") Boolean registration,
         @JsonProperty("requestedLoa") LevelOfAssurance requestedLoa
     ) {
         this.selectedIdpEntityId = selectedIdpEntityId;

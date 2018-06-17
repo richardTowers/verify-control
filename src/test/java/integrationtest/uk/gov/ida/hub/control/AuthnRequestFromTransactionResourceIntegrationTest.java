@@ -1,5 +1,8 @@
 package integrationtest.uk.gov.ida.hub.control;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrationTest;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Ignore;
@@ -10,17 +13,29 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
+import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVerifyControlIntegrationTest {
-    @Ignore
     @Test
-    public void badEntityResponseThrownWhenMandatoryFieldsAreMissing() {
-        throw new NotImplementedException("Test badEntityResponseThrownWhenMandatoryFieldsAreMissing has not been implemented");
+    public void badEntityResponseThrownWhenMandatoryFieldsAreMissing() throws IOException {
+        var url = String.format("http://localhost:%d/policy/received-authn-request/%s/select-identity-provider", verifyControl.getLocalPort(), "some-session-id");
+        var response = httpClient.target(url)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(ImmutableMap.of(), MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(422);
+
+        var msg = verifyControl.getObjectMapper().readTree(response.readEntity(String.class));
+        var errors = Streams.stream(msg.get("errors").elements()).map(JsonNode::textValue).collect(Collectors.toList());
+        assertThat(errors).contains("selectedIdpEntityId may not be empty");
+        assertThat(errors).contains("principalIpAddress may not be empty");
+        assertThat(errors).contains("registration may not be null");
+        assertThat(errors).contains("requestedLoa may not be null");
     }
 
     @Test
