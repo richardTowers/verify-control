@@ -6,15 +6,17 @@ import io.dropwizard.Configuration;
 
 public class VerifyControlConfiguration extends Configuration {
     private final String redisUrl;
-    private String samlEngineUrl;
+    private final String samlEngineUrl;
+    private final String configUrl;
 
     @JsonCreator
     public VerifyControlConfiguration(
         @JsonProperty("redisUrl") String redisUrl,
-        @JsonProperty("samlEngineUrl") String samlEngineUrl
-    ) {
+        @JsonProperty("samlEngineUrl") String samlEngineUrl,
+        @JsonProperty("configUrl") String configUrl) {
         this.redisUrl = redisUrl;
         this.samlEngineUrl = samlEngineUrl;
+        this.configUrl = configUrl;
     }
 
     public String getRedisUrl() {
@@ -23,5 +25,9 @@ public class VerifyControlConfiguration extends Configuration {
 
     public String getSamlEngineUrl() {
         return samlEngineUrl;
+    }
+
+    public String getConfigUrl() {
+        return configUrl;
     }
 }

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
@@ -41,21 +42,43 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
     @Test
     public void selectIdpShouldReturnSuccessResponseAndAudit() {
         redisClient.set("state:some-session-id", VerifySessionState.Started.NAME);
-        var response = selectIdp("some-session-id", "LEVEL_1", false);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        configureFor(configPort());
+        stubFor(
+            get(urlEqualTo("/config/idps/https:%2F%2Fsome-service-entity-id/enabled-for-signin"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("[\"https://some-idp-entity-id\"]"))
+        );
+        var response = selectIdp("https://some-idp-entity-id", "LEVEL_1", false, "some-session-id");
         assertThat(response.getStatus()).isEqualTo(201);
         // TODO: (event sink) This test should check that event sink was called.
     }
 
-    @Ignore
     @Test
     public void idpSelectedShouldThrowIfIdpIsNotAvailable() {
-        throw new NotImplementedException("Test idpSelectedShouldThrowIfIdpIsNotAvailable has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.Started.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        configureFor(configPort());
+        stubFor(
+            get(urlEqualTo("/config/idps/https:%2F%2Fsome-service-entity-id/enabled-for-signin"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("[]"))
+        );
+        var response = selectIdp("https://some-none-existent-idp-entity-id", "LEVEL_1", false, "some-session-id");
+        assertThat(response.getStatus()).isEqualTo(400);
+        var error = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(error.get("exceptionType")).isEqualTo("STATE_PROCESSING_VALIDATION");
     }
 
     @Test
     public void idpSelectedShouldThrowIfSessionInWrongState() {
         redisClient.set("state:some-session-id", VerifySessionState.Match.NAME);
-        var response = selectIdp("some-session-id", "LEVEL_1", false);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        configureFor(configPort());
+        stubFor(
+            get(urlEqualTo("/config/idps/https:%2F%2Fsome-service-entity-id/enabled-for-signin"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("[\"https://some-idp-entity-id\"]"))
+        );
+
+        var response = selectIdp("https://some-idp-entity-id", "LEVEL_1", false, "some-session-id");
         assertThat(response.getStatus()).isEqualTo(400);
         var error = response.readEntity(new GenericType<Map<String, String>>() { });
         assertThat(error.get("exceptionType")).isEqualTo("STATE_PROCESSING_VALIDATION");
@@ -80,14 +103,14 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         throw new NotImplementedException("Test getRequestIssuerIdShouldReturnRequestIssuerId has not been implemented");
     }
 
-    private Response selectIdp(String sessionId, String requestedLevelOfAssurance, boolean isRegistration) {
+    private Response selectIdp(String selectedIdpEntityId, String requestedLevelOfAssurance, boolean isRegistration, String sessionId) {
         var url = String.format("http://localhost:%d/policy/received-authn-request/%s/select-identity-provider", verifyControl.getLocalPort(), sessionId);
         return httpClient
             .target(url)
             .request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(
                 mapOf(
-                    "selectedIdpEntityId", "https://some-idp-entity-id",
+                    "selectedIdpEntityId", selectedIdpEntityId,
                     "principalIpAddress", "8.8.8.8",
                     "registration", isRegistration,
                     "requestedLoa", requestedLevelOfAssurance

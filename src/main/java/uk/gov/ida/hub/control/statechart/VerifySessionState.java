@@ -15,7 +15,7 @@ public interface VerifySessionState {
     }
 
     // Transitions
-    default IdpSelected selectIdp() { throw new StateProcessingException("selectIdp", getName()); }
+    default IdpSelected selectIdp() { throw new StateProcessingException("selectIdp", this); }
 
     // Methods
     String getName();

@@ -1,13 +1,16 @@
 package integrationtest.uk.gov.ida.hub.control.helpers;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import integrationtest.uk.gov.ida.hub.control.SessionResourceIntegrationTest;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import redis.embedded.RedisCluster;
 import uk.gov.ida.hub.control.VerifyControlApplication;
@@ -22,12 +25,15 @@ public abstract class BaseVerifyControlIntegrationTest {
     protected static RedisCommands<String, String> redisClient;
     protected static Client httpClient;
     private static RedisCluster redisCluster;
-    private static WireMockServer wireMockServer;
+    private static WireMockServer samlEngineMockServer;
+    private static WireMockServer configMockServer;
 
     @BeforeClass
     public static void beforeClass() {
-        wireMockServer = new WireMockServer(options().dynamicPort());
-        wireMockServer.start();
+        samlEngineMockServer = new WireMockServer(options().dynamicPort());
+        configMockServer = new WireMockClassRule(options().dynamicPort());
+        samlEngineMockServer.start();
+        configMockServer.start();
 
         redisCluster = RedisCluster.builder().ephemeral().replicationGroup("master", 1).build();
         redisCluster.start();
@@ -39,7 +45,8 @@ public abstract class BaseVerifyControlIntegrationTest {
             VerifyControlApplication.class,
             "config.yml",
             ConfigOverride.config("redisUrl", redisUrl),
-            ConfigOverride.config("samlEngineUrl", "http://localhost:" + wireMockServer.port())
+            ConfigOverride.config("samlEngineUrl", "http://localhost:" + samlEngineMockServer.port()),
+            ConfigOverride.config("configUrl", "http://localhost:" + configMockServer.port())
         );
         verifyControl.before();
 
@@ -49,13 +56,31 @@ public abstract class BaseVerifyControlIntegrationTest {
 
     @AfterClass
     public static void afterClass() {
-        wireMockServer.stop();
+        samlEngineMockServer.stop();
+        configMockServer.stop();
         redisClient.getStatefulConnection().close();
-        redisCluster.stop();
         verifyControl.after();
     }
 
+    @Before
+    public void before() {
+        if (!redisCluster.isActive()) {
+            redisCluster.start();
+        }
+    }
+
+    @After
+    public void after() {
+        samlEngineMockServer.resetAll();
+        configMockServer.resetAll();
+        redisCluster.stop();
+    }
+
     protected int samlEnginePort() {
-        return wireMockServer.port();
+        return samlEngineMockServer.port();
+    }
+
+    protected int configPort() {
+        return configMockServer.port();
     }
 }

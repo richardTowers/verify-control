@@ -30,6 +30,8 @@ public class ResourceFactory {
     }
 
     public AuthnRequestFromTransactionResource createAuthnRequestFromTransactionResource() {
-        return new AuthnRequestFromTransactionResource(redisClient);
+        var client = new JerseyClientBuilder(environment).build(AuthnRequestFromTransactionResource.class.getSimpleName());
+        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
+        return new AuthnRequestFromTransactionResource(redisClient, configServiceTarget);
     }
 }

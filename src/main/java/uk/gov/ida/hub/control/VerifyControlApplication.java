@@ -3,10 +3,10 @@ package uk.gov.ida.hub.control;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import uk.gov.ida.hub.control.errors.EntityNotEnabledException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.errors.StateProcessingException;
 import uk.gov.ida.hub.control.factories.ResourceFactory;
-import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
 
 public class VerifyControlApplication extends Application<VerifyControlConfiguration> {
 
@@ -37,6 +37,7 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
         // Exception Mappers
         jersey.register(new SessionNotFoundException.Mapper());
         jersey.register(new StateProcessingException.Mapper());
+        jersey.register(new EntityNotEnabledException.Mapper());
     }
 
 }

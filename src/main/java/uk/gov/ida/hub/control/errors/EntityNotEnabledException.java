@@ -9,10 +9,10 @@ import java.util.UUID;
 
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
-public class StateProcessingException extends RuntimeException {
-    public static class Mapper implements ExceptionMapper<StateProcessingException> {
+public class EntityNotEnabledException extends RuntimeException {
+    public static class Mapper implements ExceptionMapper<EntityNotEnabledException> {
         @Override
-        public Response toResponse(StateProcessingException exception) {
+        public Response toResponse(EntityNotEnabledException exception) {
             var errorId = UUID.randomUUID();
             return Response
                 .status(400)
@@ -20,18 +20,18 @@ public class StateProcessingException extends RuntimeException {
                 .entity(mapOf(
                     "errorId", errorId,
                     "exceptionType", "STATE_PROCESSING_VALIDATION",
-                    "clientMessage", "Invalid transition '" + exception.transitionName + "' for state '" + exception.state.getName() + "'",
+                    "clientMessage", "Entity '" + exception.entityId + "' is not enabled for this session. In state '" + exception.state.getName() + "'",
                     "audited", false
                 ))
                 .build();
         }
     }
 
-    private final String transitionName;
+    private final String entityId;
     private final VerifySessionState state;
 
-    public StateProcessingException(String transitionName, VerifySessionState state) {
-        this.transitionName = transitionName;
+    public EntityNotEnabledException(String entityId, VerifySessionState state) {
+        this.entityId = entityId;
         this.state = state;
     }
 
