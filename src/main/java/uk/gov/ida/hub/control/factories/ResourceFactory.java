@@ -26,7 +26,8 @@ public class ResourceFactory {
     public SessionResource createSessionResource() throws InterruptedException {
         var client = new JerseyClientBuilder(environment).build(SessionResource.class.getSimpleName());
         var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
-        return new SessionResource(redisClient, samlEngineTarget);
+        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
+        return new SessionResource(redisClient, samlEngineTarget, configServiceTarget);
     }
 
     public AuthnRequestFromTransactionResource createAuthnRequestFromTransactionResource() {

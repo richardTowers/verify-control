@@ -4,9 +4,11 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.api.sync.RedisCommands;
+import org.apache.commons.lang3.NotImplementedException;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
+import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -37,11 +39,12 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 public class SessionResource {
     private final RedisCommands<String, String> redisClient;
     private final WebTarget samlEngineWebTarget;
+    private final WebTarget configServiceTarget;
 
-
-    public SessionResource(RedisCommands<String, String> redisClient, WebTarget samlEngineWebTarget) throws InterruptedException {
+    public SessionResource(RedisCommands<String, String> redisClient, WebTarget samlEngineWebTarget, WebTarget configServiceTarget) throws InterruptedException {
         this.redisClient = redisClient;
         this.samlEngineWebTarget = samlEngineWebTarget;
+        this.configServiceTarget = configServiceTarget;
     }
 
     @POST
@@ -95,5 +98,46 @@ public class SessionResource {
             "postEndpoint", samlEngineResponse.getSsoUri(),
             "registering", parseBoolean(redisClient.hget("session:" + sessionId, "isRegistration"))
         )).build();
+    }
+
+    @POST
+    @Path("/{sessionId}/idp-authn-response")
+    public Response receiveIdpAuthnResponse(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) {
+        var issuer = redisClient.hget("session:" + sessionId, "issuer");
+        var originalState = VerifySessionState.forName(redisClient.get("state:" + sessionId));
+
+        var matchingServiceEntityId = configServiceTarget
+            .path("/config/transactions/{entityId}/matching-service-entity-id")
+            .resolveTemplate("entityId", issuer)
+            .request(APPLICATION_JSON_TYPE)
+            .get()
+            .readEntity(String.class);
+
+        var samlEngineResponse = samlEngineWebTarget
+            .path("/saml-engine/translate-idp-authn-response")
+            .request(APPLICATION_JSON_TYPE)
+            .buildPost(entity(mapOf(
+                "samlResponse", samlResponse.get("samlResponse"),
+                "sessionId", sessionId,
+                "principalIPAddressAsSeenByHub", samlResponse.get("principalIPAddressAsSeenByHub"),
+                "matchingServiceEntityId", matchingServiceEntityId
+            ), APPLICATION_JSON_TYPE))
+            .invoke()
+            .readEntity(new GenericType<Map<String, String>>() {{}});
+
+        var status = samlEngineResponse.get("status");
+
+        switch (status) {
+            case "AuthenticationFailed":
+                var newState = originalState.authenticationFailed();
+                redisClient.set("state:" + sessionId, newState.getName());
+                return Response.ok(mapOf(
+                    "sessionId", sessionId,
+                    "result", "OTHER",
+                    "isRegistration", parseBoolean(redisClient.hget("session:" + sessionId, "isRegistration"))
+                )).build();
+            default:
+                throw new NotImplementedException("Status '" + status + "' has not been implemented");
+        }
     }
 }

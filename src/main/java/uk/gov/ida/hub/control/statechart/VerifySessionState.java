@@ -19,9 +19,11 @@ public interface VerifySessionState {
 
     // Transitions
     default IdpSelected selectIdp() { throw new StateProcessingException("selectIdp", this); }
+    default AuthnFailed authenticationFailed() { throw new StateProcessingException("authenticationFailed", this); }
 
     // Methods
     String getName();
+
 
     // States
     @State(name = Started.NAME, initial = true)
@@ -39,6 +41,10 @@ public interface VerifySessionState {
     @State(name = IdpSelected.NAME)
     final class IdpSelected implements VerifySessionState {
         public static final String NAME = "idpSelected";
+
+        @Transition
+        @Override
+        public AuthnFailed authenticationFailed() { return new AuthnFailed(); }
 
         @Override
         public String getName() { return NAME; }
