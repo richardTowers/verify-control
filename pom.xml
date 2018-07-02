@@ -86,6 +86,12 @@
             <version>2.18.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>net.sourceforge.plantuml</groupId>
+            <artifactId>plantuml</artifactId>
+            <version>6703</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

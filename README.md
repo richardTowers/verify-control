@@ -24,6 +24,19 @@ What is this?
 
 A reimplementation of [alphagov/verify-hub#policy](https://github.com/alphagov/verify-hub/blob/master/hub/policy).
 
+In particular, this looks at whether the use of [Harel Statecharts](https://www.inf.ed.ac.uk/teaching/courses/seoc/2005_2006/resources/statecharts.pdf)
+could provide a more elegant implementation of the Policy microservice.
+
+Statechart
+----------
+
+A statechart is automatically generated from the source code. At the moment this is:
+
+![Diagram of the statechart](images/statechart.svg)
+
+Scope
+-----
+
 ### In scope initially:
 
 * All API endpoints should respond correctly
