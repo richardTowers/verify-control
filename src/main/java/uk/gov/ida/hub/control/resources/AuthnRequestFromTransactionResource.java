@@ -7,6 +7,7 @@ import uk.gov.ida.hub.control.errors.EntityNotEnabledException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.validation.Valid;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -52,5 +53,12 @@ public class AuthnRequestFromTransactionResource {
         var newState = originalState.selectIdp();
         redisClient.set("state:" + sessionId, newState.getName());
         return Response.status(201).build();
+    }
+
+    @GET
+    @Path("/{sessionId}/registration-request-issuer-id")
+    @Timed
+    public String getRequestIssuerId(@PathParam("sessionId") String sessionId) {
+        return redisClient.hget("session:" + sessionId, "issuer");
     }
 }

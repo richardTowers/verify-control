@@ -97,10 +97,13 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         throw new NotImplementedException("Test getSignInProcessDtoShouldReturnSignInDetailsDto has not been implemented");
     }
 
-    @Ignore
     @Test
     public void getRequestIssuerIdShouldReturnRequestIssuerId() {
-        throw new NotImplementedException("Test getRequestIssuerIdShouldReturnRequestIssuerId has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        Response response = getRequestIssuerId("some-session-id");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.readEntity(String.class)).isEqualTo("https://some-service-entity-id");
     }
 
     private Response selectIdp(String selectedIdpEntityId, String requestedLevelOfAssurance, boolean isRegistration, String sessionId) {
@@ -117,5 +120,10 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
                     ),
                 MediaType.APPLICATION_JSON_TYPE)
             );
+    }
+
+    private Response getRequestIssuerId(String sessionId) {
+        var url = String.format("http://localhost:%d/policy/received-authn-request/%s/registration-request-issuer-id", verifyControl.getLocalPort(), sessionId);
+        return httpClient.target(url).request(MediaType.APPLICATION_JSON_TYPE).get();
     }
 }
