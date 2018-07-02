@@ -8,6 +8,7 @@ import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
+import org.glassfish.jersey.client.ClientProperties;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -51,6 +52,8 @@ public abstract class BaseVerifyControlIntegrationTest {
         verifyControl.before();
 
         httpClient = new JerseyClientBuilder(verifyControl.getEnvironment())
+            .withProperty(ClientProperties.CONNECT_TIMEOUT, 1000)
+            .withProperty(ClientProperties.READ_TIMEOUT, 1000)
             .build(SessionResourceIntegrationTest.class.getSimpleName());
     }
 

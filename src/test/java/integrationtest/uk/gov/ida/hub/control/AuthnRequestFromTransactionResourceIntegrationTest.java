@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrationTest;
-import org.apache.commons.lang3.NotImplementedException;
-import org.junit.Ignore;
 import org.junit.Test;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
@@ -14,6 +12,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -95,10 +94,25 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
-    @Ignore
     @Test
     public void getSignInProcessDtoShouldReturnSignInDetailsDto() {
-        throw new NotImplementedException("Test getSignInProcessDtoShouldReturnSignInDetailsDto has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+
+        configureFor(configPort());
+        stubFor(
+            get(urlEqualTo("/config/transactions/https:%2F%2Fsome-service-entity-id/eidas-enabled"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("true"))
+        );
+
+        var url = String.format("http://localhost:%d/policy/received-authn-request/%s/sign-in-process-details", verifyControl.getLocalPort(), "some-session-id");
+        var response = httpClient.target(url).request(MediaType.APPLICATION_JSON_TYPE).get();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.readEntity(new GenericType<Map<String, Object>>() {})).containsExactly(
+            new HashMap.SimpleEntry<>("requestIssuerId", "https://some-service-entity-id"),
+            new HashMap.SimpleEntry<>("transactionSupportsEidas", true)
+        );
     }
 
     @Test
