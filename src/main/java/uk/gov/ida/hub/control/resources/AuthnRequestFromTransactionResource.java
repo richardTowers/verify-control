@@ -55,6 +55,18 @@ public class AuthnRequestFromTransactionResource {
         return Response.status(201).build();
     }
 
+    /**
+     * From a brief look at Policy it looks like the whole "AuthnFailed -> SessionStarted" transition
+     * is unnecessary - both states permit the same set of actions, so we may as well not transition
+     * and have this as a no-op.
+     */
+    @POST
+    @Path("/{sessionId}/try-another-idp")
+    @Timed
+    public void tryAnotherIdp(@PathParam("sessionId") String sessionId) {
+        // Deliberate no-op
+    }
+
     @GET
     @Path("/{sessionId}/registration-request-issuer-id")
     @Timed

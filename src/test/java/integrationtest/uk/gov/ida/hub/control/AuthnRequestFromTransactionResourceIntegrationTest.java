@@ -85,10 +85,14 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         assertThat(error.get("clientMessage")).isEqualTo("Invalid transition 'selectIdp' for state 'match'");
     }
 
-    @Ignore
     @Test
     public void tryAnotherIdpShouldReturnSuccess() {
-        throw new NotImplementedException("Test tryAnotherIdpShouldReturnSuccess has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.AuthnFailed.NAME);
+        var url = String.format("http://localhost:%d/policy/received-authn-request/%s/try-another-idp", verifyControl.getLocalPort(), "some-session-id");
+        var response = httpClient.target(url).request(MediaType.APPLICATION_JSON_TYPE).post(null);
+
+        // We think it's OK for this endpoint to be a no-op, so the only assertion we need to make is that it doesn't error.
+        assertThat(response.getStatus()).isEqualTo(204);
     }
 
     @Ignore

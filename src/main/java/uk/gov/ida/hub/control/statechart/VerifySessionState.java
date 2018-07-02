@@ -9,6 +9,7 @@ public interface VerifySessionState {
         switch (name) {
             case Started.NAME: return new Started();
             case IdpSelected.NAME: return new IdpSelected();
+            case AuthnFailed.NAME: return new AuthnFailed();
             case Match.NAME: return new Match();
             default: throw new NotImplementedException("No State for name '" + name + "'");
         }
@@ -33,6 +34,16 @@ public interface VerifySessionState {
 
     final class IdpSelected implements VerifySessionState {
         public static final String NAME = "idp-selected";
+
+        @Override
+        public String getName() { return NAME; }
+    }
+
+    final class AuthnFailed implements VerifySessionState {
+        public static final String NAME = "authn-failed";
+
+        @Override
+        public IdpSelected selectIdp() { return new IdpSelected(); }
 
         @Override
         public String getName() { return NAME; }
