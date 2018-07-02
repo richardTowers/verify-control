@@ -53,6 +53,8 @@ public class AuthnRequestFromTransactionResource {
         if (!response.contains(selectIdpDto.getSelectedIdpEntityId())) {
             throw new EntityNotEnabledException(selectIdpDto.getSelectedIdpEntityId(), originalState);
         }
+        redisClient.hset("session:" + sessionId, "isRegistration", Boolean.toString(selectIdpDto.isRegistration()));
+        redisClient.hset("session:" + sessionId, "selectedIdp", selectIdpDto.getSelectedIdpEntityId());
         var newState = originalState.selectIdp();
         redisClient.set("state:" + sessionId, newState.getName());
         return Response.status(201).build();

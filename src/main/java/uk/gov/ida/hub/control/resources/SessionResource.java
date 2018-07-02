@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.UUID;
 
+import static java.lang.Boolean.parseBoolean;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.created;
@@ -76,11 +77,11 @@ public class SessionResource {
     @GET
     @Path("/{sessionId}/idp-authn-request-from-hub")
     public Response getIdpAuthnRequestFromHub(@PathParam("sessionId") String sessionId) {
+        String selectedIdp = redisClient.hget("session:" + sessionId, "selectedIdp");
 
-        // TODO: Get these parameters from the state:
         var parameters = ImmutableMap.builder()
-            .put("idpEntityId", "https://some-idp-entity-id")
-            .put("levelsOfAssurance", ImmutableList.of("LEVEL_1"))
+            .put("idpEntityId", selectedIdp)
+            .put("levelsOfAssurance", ImmutableList.of("LEVEL_1")) // TODO get this from config
             .build();
 
         var samlEngineResponse = samlEngineWebTarget
@@ -92,7 +93,7 @@ public class SessionResource {
         return Response.ok().entity(mapOf(
             "samlRequest", samlEngineResponse.getSamlRequest(),
             "postEndpoint", samlEngineResponse.getSsoUri(),
-            "registering", false // TODO
+            "registering", parseBoolean(redisClient.hget("session:" + sessionId, "isRegistration"))
         )).build();
     }
 }

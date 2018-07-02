@@ -49,6 +49,10 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         );
         var response = selectIdp("https://some-idp-entity-id", "LEVEL_1", false, "some-session-id");
         assertThat(response.getStatus()).isEqualTo(201);
+        assertThat(redisClient.hgetall("session:some-session-id")).contains(
+            new HashMap.SimpleEntry<>("selectedIdp", "https://some-idp-entity-id"),
+            new HashMap.SimpleEntry<>("isRegistration", "false")
+        );
         // TODO: (event sink) This test should check that event sink was called.
     }
 

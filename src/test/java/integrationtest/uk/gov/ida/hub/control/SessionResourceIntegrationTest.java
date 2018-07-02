@@ -84,6 +84,9 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
 
     @Test
     public void shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnSignIn() {
+        redisClient.hset("session:some-session-id", "isRegistration", "false");
+        redisClient.hset("session:some-session-id", "selectedIdp", "https://some-idp-entity-id");
+
         configureFor(samlEnginePort());
         stubFor(
             post(urlEqualTo("/saml-engine/generate-idp-authn-request"))
@@ -103,9 +106,11 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         assertThat(responseBody.get("registering")).isEqualTo(false);
     }
 
-    @Ignore("Can't make this pass without implementing some statefulness :)")
     @Test
     public void shouldReturnOkWhenGeneratingIdpAuthnRequestFromHubIsSuccessfulOnRegistration() {
+        redisClient.hset("session:some-session-id", "isRegistration", "true");
+        redisClient.hset("session:some-session-id", "selectedIdp", "https://some-idp-entity-id");
+
         configureFor(samlEnginePort());
         stubFor(
             post(urlEqualTo("/saml-engine/generate-idp-authn-request"))
