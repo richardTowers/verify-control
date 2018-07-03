@@ -32,7 +32,11 @@ public class ResourceFactory {
         var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
-        return new SessionResource(redisClient, samlEngineTarget, configServiceTarget, samlSoapProxyWebTarget);
+        return new SessionResource(
+            redisClient,
+            samlEngineTarget,
+            new ConfigServiceClient(configServiceTarget),
+            samlSoapProxyWebTarget);
     }
 
     public AuthnRequestFromTransactionResource createAuthnRequestFromTransactionResource() {

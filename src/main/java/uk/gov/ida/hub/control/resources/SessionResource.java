@@ -7,6 +7,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 import org.apache.commons.lang3.NotImplementedException;
 import org.joda.time.DateTime;
 import uk.gov.ida.hub.control.api.AuthnRequest;
+import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
@@ -40,18 +41,18 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 public class SessionResource {
     private final RedisCommands<String, String> redisClient;
     private final WebTarget samlEngineWebTarget;
-    private final WebTarget configServiceWebTarget;
+    private final ConfigServiceClient configServiceClient;
     private final WebTarget samlSoapProxyWebTarget;
 
     public SessionResource(
         RedisCommands<String, String> redisClient,
         WebTarget samlEngineWebTarget,
-        WebTarget configServiceWebTarget,
+        ConfigServiceClient configServiceClient,
         WebTarget samlSoapProxyWebTarget
     ) {
         this.redisClient = redisClient;
         this.samlEngineWebTarget = samlEngineWebTarget;
-        this.configServiceWebTarget = configServiceWebTarget;
+        this.configServiceClient = configServiceClient;
         this.samlSoapProxyWebTarget = samlSoapProxyWebTarget;
     }
 
@@ -115,12 +116,7 @@ public class SessionResource {
         var originalState = VerifySessionState.forName(redisClient.get("state:" + sessionId));
         var issuer = session.get("issuer");
 
-        var matchingServiceEntityId = configServiceWebTarget
-            .path("/config/transactions/{entityId}/matching-service-entity-id")
-            .resolveTemplate("entityId", issuer)
-            .request(APPLICATION_JSON_TYPE)
-            .get()
-            .readEntity(String.class);
+        var matchingServiceEntityId = configServiceClient.getMatchingServiceEntityId(issuer);
 
         var samlEngineResponse = samlEngineWebTarget
             .path("/saml-engine/translate-idp-authn-response")
@@ -149,12 +145,7 @@ public class SessionResource {
             case "Success": {
                 var newState = originalState.authenticationSucceeded();
 
-                var matchingServiceConfig = configServiceWebTarget
-                    .path("/config/matching-services/{entityId}")
-                    .resolveTemplate("entityId", matchingServiceEntityId)
-                    .request(APPLICATION_JSON_TYPE)
-                    .get()
-                    .readEntity(new GenericType<Map<String, String>>() {});
+                var matchingServiceConfig = configServiceClient.getMatchingServiceConfig(matchingServiceEntityId);
 
                 var samlSoapProxyRequest = ImmutableMap.builder()
                     .put("requestId", session.get("requestId"))
