@@ -5,6 +5,7 @@ import io.dropwizard.setup.Environment;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.VerifyControlConfiguration;
+import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
 import uk.gov.ida.hub.control.resources.Cycle3DataResource;
 import uk.gov.ida.hub.control.resources.MatchingServiceResponseResource;
@@ -36,7 +37,10 @@ public class ResourceFactory {
     public AuthnRequestFromTransactionResource createAuthnRequestFromTransactionResource() {
         var client = new JerseyClientBuilder(environment).build(AuthnRequestFromTransactionResource.class.getSimpleName());
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
-        return new AuthnRequestFromTransactionResource(redisClient, configServiceTarget);
+        return new AuthnRequestFromTransactionResource(
+            redisClient,
+            new ConfigServiceClient(configServiceTarget)
+        );
     }
 
     public MatchingServiceResponseResource createMatchingServiceResponseResource() {
