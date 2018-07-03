@@ -13,6 +13,8 @@ public interface VerifySessionState {
             case IdpSelected.NAME: return new IdpSelected();
             case AuthnFailed.NAME: return new AuthnFailed();
             case Match.NAME: return new Match();
+            case Cycle0And1MatchRequestSent.NAME: return new Cycle0And1MatchRequestSent();
+            case AwaitingCycle3Data.NAME: return new AwaitingCycle3Data();
             default: throw new NotImplementedException("No State for name '" + name + "'");
         }
     }
@@ -20,7 +22,8 @@ public interface VerifySessionState {
     // Transitions
     default IdpSelected selectIdp() { throw new StateProcessingException("selectIdp", this); }
     default AuthnFailed authenticationFailed() { throw new StateProcessingException("authenticationFailed", this); }
-    default Cycle0And1MatchRequestSent authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
+    default Matching authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
+    default AwaitingCycle3Data awaitCycle3Data() { throw new StateProcessingException("awaitCycle3Data", this); }
 
     // Methods
     String getName();
@@ -49,7 +52,7 @@ public interface VerifySessionState {
 
         @Transition
         @Override
-        public Cycle0And1MatchRequestSent authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
+        public Matching authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
 
         @Override
         public String getName() { return NAME; }
@@ -76,8 +79,20 @@ public interface VerifySessionState {
     }
 
     @State(name = Cycle0And1MatchRequestSent.NAME, initial = true)
-    final class Cycle0And1MatchRequestSent extends Matching implements VerifySessionState {
+    final class Cycle0And1MatchRequestSent extends Matching {
         public static final String NAME = "cycle0And1MatchRequestSent";
+
+        @Transition
+        @Override
+        public AwaitingCycle3Data awaitCycle3Data() { return new AwaitingCycle3Data(); }
+
+        @Override
+        public String getName() { return NAME; }
+    }
+
+    @State(name = AwaitingCycle3Data.NAME)
+    final class AwaitingCycle3Data extends Matching {
+        public static final String NAME = "awaitingCycle3Data";
 
         @Override
         public String getName() { return NAME; }

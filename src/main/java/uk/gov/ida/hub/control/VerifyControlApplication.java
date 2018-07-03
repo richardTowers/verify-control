@@ -33,6 +33,7 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
         // Resources
         jersey.register(resourceFactory.createSessionResource());
         jersey.register(resourceFactory.createAuthnRequestFromTransactionResource());
+        jersey.register(resourceFactory.createMatchingServiceResponseResource());
 
         // Exception Mappers
         jersey.register(new SessionNotFoundException.Mapper());

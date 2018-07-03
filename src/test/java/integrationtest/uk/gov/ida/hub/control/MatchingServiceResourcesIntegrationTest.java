@@ -1,10 +1,23 @@
 package integrationtest.uk.gov.ida.hub.control;
 
+import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrationTest;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Ignore;
 import org.junit.Test;
+import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
-public class MatchingServiceResourcesIntegrationTest {
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+import java.util.AbstractMap;
+import java.util.Map;
+
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
+
+public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIntegrationTest {
+
     @Ignore
     @Test
     public void shouldReturnOkWhenASuccessMatchingServiceResponseIsReceived() {
@@ -45,10 +58,25 @@ public class MatchingServiceResourcesIntegrationTest {
     public void journeyWithFailedAccountCreation() {
         throw new NotImplementedException("Test journeyWithFailedAccountCreation has not been implemented");
     }
-    @Ignore
+
     @Test
-    public void responseProcessingDetails_shouldReturnWaitingForC3Status_whenNoMatchResponseSentFromMatchingServiceAndC3Required() {
-        throw new NotImplementedException("Test responseProcessingDetails_shouldReturnWaitingForC3Status_whenNoMatchResponseSentFromMatchingServiceAndC3Required has not been implemented");
+    public void responseProcessingDetailsShouldReturnWaitingForC3StatusWhenNoMatchResponseSentFromMatchingServiceAndC3Required() {
+        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), "some-session-id"))
+            .request(APPLICATION_JSON_TYPE)
+            .buildPost(entity(mapOf("samlResponse", "some-saml-response"), APPLICATION_JSON_TYPE))
+            .invoke();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.NAME);
+        var responseBody = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(responseBody).contains(
+            new AbstractMap.SimpleEntry<>("responseProcessingStatus", "GET_C3_DATA"),
+            new AbstractMap.SimpleEntry<>("sessionId", "some-session-id")
+        );
     }
     @Ignore
     @Test

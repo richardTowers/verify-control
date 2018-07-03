@@ -6,6 +6,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.VerifyControlConfiguration;
 import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
+import uk.gov.ida.hub.control.resources.MatchingServiceResponseResource;
 import uk.gov.ida.hub.control.resources.SessionResource;
 
 import java.net.URI;
@@ -35,5 +36,11 @@ public class ResourceFactory {
         var client = new JerseyClientBuilder(environment).build(AuthnRequestFromTransactionResource.class.getSimpleName());
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         return new AuthnRequestFromTransactionResource(redisClient, configServiceTarget);
+    }
+
+    public MatchingServiceResponseResource createMatchingServiceResponseResource() {
+        var client = new JerseyClientBuilder(environment).build(MatchingServiceResponseResource.class.getSimpleName());
+        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
+        return new MatchingServiceResponseResource(redisClient, configServiceTarget);
     }
 }
