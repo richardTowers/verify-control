@@ -47,7 +47,7 @@ public class ResourceFactory {
     public MatchingServiceResponseResource createMatchingServiceResponseResource() {
         var client = new JerseyClientBuilder(environment).build(MatchingServiceResponseResource.class.getSimpleName());
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
-        return new MatchingServiceResponseResource(redisClient, configServiceTarget);
+        return new MatchingServiceResponseResource(redisClient);
     }
 
     public Cycle3DataResource createCycle3DataResource() {

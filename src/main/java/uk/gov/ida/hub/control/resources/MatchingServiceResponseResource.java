@@ -8,7 +8,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
@@ -19,11 +18,9 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 @Consumes(MediaType.APPLICATION_JSON)
 public class MatchingServiceResponseResource {
     private final RedisCommands<String, String> redisClient;
-    private final WebTarget configServiceTarget;
 
-    public MatchingServiceResponseResource(RedisCommands<String, String> redisClient, WebTarget configServiceTarget) {
+    public MatchingServiceResponseResource(RedisCommands<String, String> redisClient) {
         this.redisClient = redisClient;
-        this.configServiceTarget = configServiceTarget;
     }
 
     @POST
