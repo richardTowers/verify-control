@@ -12,7 +12,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 
-public class StatechartAnalyzer {
+class StatechartAnalyzer {
 
   public static Set<StateHierarchy> getStateHierarchy(Class<?>... classes) {
 

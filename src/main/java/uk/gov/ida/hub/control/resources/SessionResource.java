@@ -48,7 +48,7 @@ public class SessionResource {
         WebTarget samlEngineWebTarget,
         WebTarget configServiceWebTarget,
         WebTarget samlSoapProxyWebTarget
-    ) throws InterruptedException {
+    ) {
         this.redisClient = redisClient;
         this.samlEngineWebTarget = samlEngineWebTarget;
         this.configServiceWebTarget = configServiceWebTarget;

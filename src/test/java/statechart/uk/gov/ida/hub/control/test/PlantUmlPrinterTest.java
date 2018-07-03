@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 
 public class PlantUmlPrinterTest {
 
-  private Set<StateHierarchy> stateHierarchies = ImmutableSet.of(
+  private final Set<StateHierarchy> stateHierarchies = ImmutableSet.of(
       new StateHierarchy(
           "open",
           true,

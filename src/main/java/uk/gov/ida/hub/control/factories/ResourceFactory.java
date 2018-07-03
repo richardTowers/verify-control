@@ -25,7 +25,7 @@ public class ResourceFactory {
         this.redisClient = connectToRedis(RedisClient.create(configuration.getRedisUrl()));
     }
 
-    public SessionResource createSessionResource() throws InterruptedException {
+    public SessionResource createSessionResource() {
         var client = new JerseyClientBuilder(environment).build(SessionResource.class.getSimpleName());
         var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));

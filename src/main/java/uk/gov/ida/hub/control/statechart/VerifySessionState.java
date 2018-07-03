@@ -74,7 +74,7 @@ public interface VerifySessionState {
 
     @State(name = Matching.NAME)
     abstract class Matching implements VerifySessionState {
-        public static final String NAME = "matching";
+        static final String NAME = "matching";
 
         @Override
         public String getName() { return NAME; }
