@@ -27,7 +27,8 @@ public class ResourceFactory {
         var client = new JerseyClientBuilder(environment).build(SessionResource.class.getSimpleName());
         var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
-        return new SessionResource(redisClient, samlEngineTarget, configServiceTarget);
+        var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
+        return new SessionResource(redisClient, samlEngineTarget, configServiceTarget, samlSoapProxyWebTarget);
     }
 
     public AuthnRequestFromTransactionResource createAuthnRequestFromTransactionResource() {

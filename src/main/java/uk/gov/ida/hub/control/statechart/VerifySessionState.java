@@ -20,6 +20,7 @@ public interface VerifySessionState {
     // Transitions
     default IdpSelected selectIdp() { throw new StateProcessingException("selectIdp", this); }
     default AuthnFailed authenticationFailed() { throw new StateProcessingException("authenticationFailed", this); }
+    default Cycle0And1MatchRequestSent authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
 
     // Methods
     String getName();
@@ -46,6 +47,10 @@ public interface VerifySessionState {
         @Override
         public AuthnFailed authenticationFailed() { return new AuthnFailed(); }
 
+        @Transition
+        @Override
+        public Cycle0And1MatchRequestSent authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
+
         @Override
         public String getName() { return NAME; }
     }
@@ -57,6 +62,22 @@ public interface VerifySessionState {
         @Transition
         @Override
         public IdpSelected selectIdp() { return new IdpSelected(); }
+
+        @Override
+        public String getName() { return NAME; }
+    }
+
+    @State(name = Matching.NAME)
+    abstract class Matching implements VerifySessionState {
+        public static final String NAME = "matching";
+
+        @Override
+        public String getName() { return NAME; }
+    }
+
+    @State(name = Cycle0And1MatchRequestSent.NAME, initial = true)
+    final class Cycle0And1MatchRequestSent extends Matching implements VerifySessionState {
+        public static final String NAME = "cycle0And1MatchRequestSent";
 
         @Override
         public String getName() { return NAME; }

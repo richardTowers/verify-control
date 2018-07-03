@@ -28,13 +28,16 @@ public abstract class BaseVerifyControlIntegrationTest {
     private static RedisCluster redisCluster;
     private static WireMockServer samlEngineMockServer;
     private static WireMockServer configMockServer;
+    private static WireMockServer samlSoapProxyMockServer;
 
     @BeforeClass
     public static void beforeClass() {
         samlEngineMockServer = new WireMockServer(options().dynamicPort());
         configMockServer = new WireMockClassRule(options().dynamicPort());
+        samlSoapProxyMockServer = new WireMockClassRule(options().dynamicPort());
         samlEngineMockServer.start();
         configMockServer.start();
+        samlSoapProxyMockServer.start();
 
         redisCluster = RedisCluster.builder().ephemeral().replicationGroup("master", 1).build();
         redisCluster.start();
@@ -47,7 +50,8 @@ public abstract class BaseVerifyControlIntegrationTest {
             "config.yml",
             ConfigOverride.config("redisUrl", redisUrl),
             ConfigOverride.config("samlEngineUrl", "http://localhost:" + samlEngineMockServer.port()),
-            ConfigOverride.config("configUrl", "http://localhost:" + configMockServer.port())
+            ConfigOverride.config("configUrl", "http://localhost:" + configMockServer.port()),
+            ConfigOverride.config("samlSoapProxyUrl", "http://localhost:" + samlSoapProxyMockServer.port())
         );
         verifyControl.before();
 
@@ -61,6 +65,7 @@ public abstract class BaseVerifyControlIntegrationTest {
     public static void afterClass() {
         samlEngineMockServer.stop();
         configMockServer.stop();
+        samlSoapProxyMockServer.stop();
         redisClient.getStatefulConnection().close();
         verifyControl.after();
     }
@@ -76,6 +81,7 @@ public abstract class BaseVerifyControlIntegrationTest {
     public void after() {
         samlEngineMockServer.resetAll();
         configMockServer.resetAll();
+        samlSoapProxyMockServer.resetAll();
         redisCluster.stop();
     }
 
@@ -85,5 +91,9 @@ public abstract class BaseVerifyControlIntegrationTest {
 
     protected int configPort() {
         return configMockServer.port();
+    }
+
+    protected int samlSoapProxyPort() {
+        return samlSoapProxyMockServer.port();
     }
 }

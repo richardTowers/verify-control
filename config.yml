@@ -6,3 +6,4 @@ logging:
 redisUrl: "redis://localhost:4567"
 samlEngineUrl: "http://localhost:50120"
 configUrl: "http://localhost:50240"
+samlSoapProxyUrl: "http://localhost:50160"
