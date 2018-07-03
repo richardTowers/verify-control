@@ -26,6 +26,7 @@ public class StatechartVisualisationTest {
             VerifySessionState.Matching.class,
             VerifySessionState.AwaitingCycle3Data.class,
             VerifySessionState.Cycle0And1MatchRequestSent.class,
+            VerifySessionState.Cycle3MatchRequestSent.class,
             VerifySessionState.Match.class);
 
         String result = PlantUmlPrinter.printPlantUml(stateHierarchy);

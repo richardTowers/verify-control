@@ -6,6 +6,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.VerifyControlConfiguration;
 import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
+import uk.gov.ida.hub.control.resources.Cycle3DataResource;
 import uk.gov.ida.hub.control.resources.MatchingServiceResponseResource;
 import uk.gov.ida.hub.control.resources.SessionResource;
 
@@ -42,5 +43,12 @@ public class ResourceFactory {
         var client = new JerseyClientBuilder(environment).build(MatchingServiceResponseResource.class.getSimpleName());
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         return new MatchingServiceResponseResource(redisClient, configServiceTarget);
+    }
+
+    public Cycle3DataResource createCycle3DataResource() {
+        var client = new JerseyClientBuilder(environment).build(Cycle3DataResource.class.getSimpleName());
+        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
+        var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
+        return new Cycle3DataResource(redisClient, configServiceTarget, samlSoapProxyWebTarget);
     }
 }

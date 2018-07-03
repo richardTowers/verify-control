@@ -78,6 +78,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
             new AbstractMap.SimpleEntry<>("sessionId", "some-session-id")
         );
     }
+
     @Ignore
     @Test
     public void isResponseFromHubReady_shouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle3() {
