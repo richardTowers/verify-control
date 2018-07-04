@@ -5,9 +5,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.apache.commons.lang3.NotImplementedException;
-import org.joda.time.DateTime;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
+import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
@@ -42,18 +42,18 @@ public class SessionResource {
     private final RedisCommands<String, String> redisClient;
     private final WebTarget samlEngineWebTarget;
     private final ConfigServiceClient configServiceClient;
-    private final WebTarget samlSoapProxyWebTarget;
+    private final SamlSoapProxyClient samlSoapProxyClient;
 
     public SessionResource(
         RedisCommands<String, String> redisClient,
         WebTarget samlEngineWebTarget,
         ConfigServiceClient configServiceClient,
-        WebTarget samlSoapProxyWebTarget
+        SamlSoapProxyClient samlSoapProxyClient
     ) {
         this.redisClient = redisClient;
         this.samlEngineWebTarget = samlEngineWebTarget;
         this.configServiceClient = configServiceClient;
-        this.samlSoapProxyWebTarget = samlSoapProxyWebTarget;
+        this.samlSoapProxyClient = samlSoapProxyClient;
     }
 
     @POST
@@ -146,33 +146,18 @@ public class SessionResource {
                 var newState = originalState.authenticationSucceeded();
 
                 var matchingServiceConfig = configServiceClient.getMatchingServiceConfig(matchingServiceEntityId);
-
-                var samlSoapProxyRequest = ImmutableMap.builder()
-                    .put("requestId", session.get("requestId"))
-                    .put("encryptedMatchingDatasetAssertion", samlEngineResponse.get("encryptedMatchingDatasetAssertion"))
-                    .put("authnStatementAssertion", samlEngineResponse.get("authnStatementAssertion"))
-                    .put("authnRequestIssuerEntityId", issuer)
-                    .put("assertionConsumerServiceUri", "https://todo_get_this_from_config") // TODO get this from config
-                    .put("matchingServiceEntityId", matchingServiceEntityId)
-                    .put("matchingServiceRequestTimeout", DateTime.now().plusMinutes(5)) // TODO don't hardcode this
-                    .put("levelOfAssurance", samlEngineResponse.get("loaAchieved"))
-                    .put("persistentId", samlEngineResponse.get("persistentId"))
-                    .put("assertionExpiry", DateTime.now().plusMinutes(5)) // TODO don't hardcode this
-                    .put("attributeQueryUri", matchingServiceConfig.get("uri"))
-                    .put("onboarding", matchingServiceConfig.get("onboarding"))
-                    .build();
-
-                int samlSoapProxyResponseStatus = samlSoapProxyWebTarget
-                    .path("/matching-service-request-sender")
-                    .queryParam("sessionId", sessionId)
-                    .request(APPLICATION_JSON_TYPE)
-                    .buildPost(entity(samlSoapProxyRequest, APPLICATION_JSON_TYPE))
-                    .invoke()
-                    .getStatus();
-
-                if (samlSoapProxyResponseStatus != 200) {
-                    throw new RuntimeException("TODO: better exception"); // TODO better exception
-                }
+                samlSoapProxyClient.makeMatchingServiceRequest(
+                    sessionId,
+                    session.get("requestId"),
+                    samlEngineResponse.get("encryptedMatchingDatasetAssertion"),
+                    samlEngineResponse.get("authnStatementAssertion"),
+                    matchingServiceEntityId,
+                    samlEngineResponse.get("loaAchieved"),
+                    samlEngineResponse.get("persistentId"),
+                    matchingServiceConfig.get("uri"),
+                    issuer,
+                    matchingServiceConfig.get("onboarding")
+                );
 
                 redisClient.set("state:" + sessionId, newState.getName());
                 return Response.ok(mapOf(

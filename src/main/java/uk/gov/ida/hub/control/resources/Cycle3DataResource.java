@@ -33,7 +33,7 @@ public class Cycle3DataResource {
         var stateKey = "state:" + sessionId;
         var session = redisClient.hgetall("session:" + sessionId);
 
-        samlSoapProxyClient.makeMatchingServiceRequest(sessionId, session.get("requestId"), session.get("issuer"));
+        samlSoapProxyClient.makeCycle3MatchingServiceRequest(sessionId, session.get("requestId"), session.get("issuer"));
 
         VerifySessionState state = VerifySessionState.forName(redisClient.get(stateKey));
         redisClient.set(stateKey, state.submitCycle3Request().getName());

@@ -36,7 +36,7 @@ public class ResourceFactory {
             redisClient,
             samlEngineTarget,
             new ConfigServiceClient(configServiceTarget),
-            samlSoapProxyWebTarget);
+            new SamlSoapProxyClient(samlSoapProxyWebTarget));
     }
 
     public AuthnRequestFromTransactionResource createAuthnRequestFromTransactionResource() {
@@ -49,14 +49,11 @@ public class ResourceFactory {
     }
 
     public MatchingServiceResponseResource createMatchingServiceResponseResource() {
-        var client = new JerseyClientBuilder(environment).build(MatchingServiceResponseResource.class.getSimpleName());
-        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         return new MatchingServiceResponseResource(redisClient);
     }
 
     public Cycle3DataResource createCycle3DataResource() {
         var client = new JerseyClientBuilder(environment).build(Cycle3DataResource.class.getSimpleName());
-        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
         return new Cycle3DataResource(redisClient, new SamlSoapProxyClient(samlSoapProxyWebTarget));
     }
