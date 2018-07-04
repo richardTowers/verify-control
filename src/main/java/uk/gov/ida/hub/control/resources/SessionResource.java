@@ -101,9 +101,9 @@ public class SessionResource {
         var status = samlEngineResponse.get("status");
 
         switch (status) {
-            case "AuthenticationFailed": {
+            case "NoAuthenticationContext":
+            case "AuthenticationFailed":
                 return handleAuthenticationFailed(sessionClient, sessionId);
-            }
             case "Success": {
                 return handleAuthenticationSuccess(
                     sessionClient,
