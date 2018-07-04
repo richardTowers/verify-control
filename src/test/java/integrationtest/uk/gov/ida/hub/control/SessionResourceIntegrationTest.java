@@ -130,10 +130,23 @@ public class SessionResourceIntegrationTest extends BaseVerifyControlIntegration
         assertThat(responseBody.get("registering")).isEqualTo(true);
     }
 
-    @Ignore
     @Test
     public void shouldReturnNotFoundWhenSessionDoesNotExistInPolicy() {
-        throw new NotImplementedException("Test shouldReturnNotFoundWhenSessionDoesNotExistInPolicy has not been implemented");
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/saml-engine/generate-idp-authn-request"))
+                .withRequestBody(matchingJsonPath("idpEntityId", equalTo("https://some-idp-entity-id")))
+                .withRequestBody(matchingJsonPath("levelsOfAssurance[0]", equalTo("LEVEL_1")))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", MediaType.APPLICATION_JSON)
+                        .withBody("{\"samlRequest\":\"some-saml-request\",\"ssoUri\":\"https://some-sso-uri\"}")
+                )
+        );
+        var response = generateIdpAuthnRequest("some-session-id");
+        assertThat(response.getStatus()).isEqualTo(400);
+        var responseBody = response.readEntity(new GenericType<Map<String, Object>>() {});
+        assertThat(responseBody.get("exceptionType")).isEqualTo("SESSION_NOT_FOUND");
     }
 
     @Ignore

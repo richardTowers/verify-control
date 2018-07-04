@@ -1,16 +1,11 @@
 package integrationtest.uk.gov.ida.hub.control;
 
+import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrationTest;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class SessionTimeoutIntegrationTests {
-    @Ignore
-    @Test
-    public void shouldUpdateSessionStateAndSendAnAttributeQueryRequestWhenASuccessResponseIsReceivedFromIdp() {
-        throw new NotImplementedException("Test shouldUpdateSessionStateAndSendAnAttributeQueryRequestWhenASuccessResponseIsReceivedFromIdp has not been implemented");
-    }
-
+public class SessionTimeoutIntegrationTests extends BaseVerifyControlIntegrationTest {
     @Ignore
     @Test
     public void selectIdpShouldReturnErrorWhenSessionHasTimedOut() {
