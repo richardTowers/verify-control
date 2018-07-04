@@ -51,7 +51,12 @@ public class ResourceFactory {
     }
 
     public MatchingServiceResponseResource createMatchingServiceResponseResource() {
-        return new MatchingServiceResponseResource(new SessionClient(redisClient));
+        var client = new JerseyClientBuilder(environment).build(MatchingServiceResponseResource.class.getSimpleName());
+        var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
+        return new MatchingServiceResponseResource(
+            new SessionClient(redisClient),
+            new SamlEngineClient(samlEngineTarget)
+        );
     }
 
     public Cycle3DataResource createCycle3DataResource() {

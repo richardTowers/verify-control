@@ -26,6 +26,7 @@ public interface VerifySessionState {
     default AwaitingCycle3Data awaitCycle3Data() { throw new StateProcessingException("awaitCycle3Data", this); }
     default Cycle3MatchRequestSent submitCycle3Request() { throw new StateProcessingException("submitCycle3Request", this); }
     default FraudResponse fraudResponse() { throw new StateProcessingException("fraudResponse", this); }
+    default Match match() { throw new StateProcessingException("match", this); }
 
     // Methods
     String getName();
@@ -99,6 +100,10 @@ public interface VerifySessionState {
 
         @Transition
         @Override
+        public Match match() { return new Match(); }
+
+        @Transition
+        @Override
         public AwaitingCycle3Data awaitCycle3Data() { return new AwaitingCycle3Data(); }
 
         @Override
@@ -128,6 +133,10 @@ public interface VerifySessionState {
     @State(name = Cycle3MatchRequestSent.NAME)
     final class Cycle3MatchRequestSent extends Matching {
         public static final String NAME = "cycle3MatchRequestSent";
+
+        @Transition
+        @Override
+        public Match match() { return new Match(); }
 
         @Override
         public String getName() { return NAME; }

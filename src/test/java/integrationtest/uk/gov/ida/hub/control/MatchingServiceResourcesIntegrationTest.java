@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import java.util.AbstractMap;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,11 +19,29 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIntegrationTest {
 
-    @Ignore
     @Test
     public void shouldReturnOkWhenASuccessMatchingServiceResponseIsReceived() {
-        throw new NotImplementedException("Test shouldReturnOkWhenASuccessMatchingServiceResponseIsReceived has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+
+        configureFor(samlEnginePort());
+        stubFor(
+            post(
+                urlPathEqualTo("/saml-engine/translate-attribute-query")).willReturn(
+                    aResponse().withHeader("Content-Type", "application/json").withBody("{\"status\":\"MatchingServiceMatch\"}")
+                )
+        );
+
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), "some-session-id"))
+            .request(APPLICATION_JSON_TYPE)
+            .buildPost(entity(mapOf("samlResponse", "some-saml-response"), APPLICATION_JSON_TYPE))
+            .invoke();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Match.NAME);
     }
+
     @Ignore
     @Test
     public void shouldReturnOkWhenAMatchingServiceFailureResponseIsReceived() {
@@ -63,6 +82,14 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
     public void responseProcessingDetailsShouldReturnWaitingForC3StatusWhenNoMatchResponseSentFromMatchingServiceAndC3Required() {
         redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.NAME);
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+
+        configureFor(samlEnginePort());
+        stubFor(
+            post(
+                urlPathEqualTo("/saml-engine/translate-attribute-query")).willReturn(
+                aResponse().withHeader("Content-Type", "application/json").withBody("{\"status\":\"NoMatchingServiceMatchFromMatchingService\"}")
+            )
+        );
 
         Response response = httpClient
             .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), "some-session-id"))

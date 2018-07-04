@@ -69,4 +69,27 @@ public class SamlEngineClient {
                 );
         }
     }
+
+    public Map<String, String> translateMatchingServiceResponse(String samlResponse) throws ApiBadRequestException {
+        String path = "/saml-engine/translate-attribute-query";
+        Response response = samlEngineWebTarget
+            .path(path)
+            .request(APPLICATION_JSON_TYPE)
+            .buildPost(entity(mapOf("samlResponse", samlResponse), APPLICATION_JSON_TYPE))
+            .invoke();
+
+        var responseBody = response.readEntity(new GenericType<Map<String, String>>() {{ }});
+
+        switch (response.getStatus()) {
+            case 200:
+                return responseBody;
+            default:
+                throw new ApiBadRequestException(
+                    path,
+                    responseBody.get("clientMessage"),
+                    responseBody.get("exceptionType")
+                );
+        }
+
+    }
 }
