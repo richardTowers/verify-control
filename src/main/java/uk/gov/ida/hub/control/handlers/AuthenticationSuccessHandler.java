@@ -51,8 +51,8 @@ public class AuthenticationSuccessHandler {
         var session = sessionClient.getAll(sessionId);
         var allowedLevelsOfAssurance = configServiceClient.getLevelsOfAssurance(session.get("issuer"));
 
-        String loaAchieved = samlEngineResponse.get("loaAchieved");
-        LevelOfAssurance levelOfAssuranceAchieved = LevelOfAssurance.valueOf(loaAchieved);
+        var loaAchieved = samlEngineResponse.get("loaAchieved");
+        var levelOfAssuranceAchieved = LevelOfAssurance.valueOf(loaAchieved);
         if (!allowedLevelsOfAssurance.contains(levelOfAssuranceAchieved)) {
             throw new ConditionNotMetException(
                 "Level of Assurance not permitted. Needed one of [" +
@@ -61,6 +61,14 @@ public class AuthenticationSuccessHandler {
                     levelOfAssuranceAchieved
             );
         }
+        var selectedIdp = session.get("selectedIdp");
+        String issuer = samlEngineResponse.get("issuer");
+        if (!selectedIdp.equals(issuer)) {
+            throw new ConditionNotMetException(
+                "Issuer in response does not match selected IdP. Expected " + selectedIdp + " but got " + issuer
+            );
+        }
+
 
         var matchingServiceConfig = configServiceClient.getMatchingServiceConfig(matchingServiceEntityId);
         samlSoapProxyClient.makeMatchingServiceRequest(
