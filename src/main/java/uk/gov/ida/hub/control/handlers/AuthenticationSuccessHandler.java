@@ -3,6 +3,7 @@ package uk.gov.ida.hub.control.handlers;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
+import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.core.Response;
@@ -20,7 +21,7 @@ public class AuthenticationSuccessHandler {
         String sessionId,
         String matchingServiceEntityId,
         Map<String, String> samlEngineResponse
-    ) {
+    ) throws SessionNotFoundException {
         var state = sessionClient.getState(sessionId);
         var stateToTransitionTo = state.authenticationSucceeded();
 
@@ -43,7 +44,7 @@ public class AuthenticationSuccessHandler {
         String matchingServiceEntityId,
         Map<String, String> samlEngineResponse,
         VerifySessionState.Matching stateToTransitionTo
-    ) {
+    ) throws SessionNotFoundException {
         var session = sessionClient.getAll(sessionId);
 
         var matchingServiceConfig = configServiceClient.getMatchingServiceConfig(matchingServiceEntityId);

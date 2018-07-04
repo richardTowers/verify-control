@@ -5,6 +5,7 @@ import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.dtos.SelectIdpDto;
 import uk.gov.ida.hub.control.errors.EntityNotEnabledException;
+import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 
 import javax.validation.Valid;
 import javax.ws.rs.GET;
@@ -28,7 +29,7 @@ public class AuthnRequestFromTransactionResource {
     @POST
     @Path("/{sessionId}/select-identity-provider")
     @Timed
-    public Response selectIdentityProvider(@PathParam("sessionId") String sessionId, @Valid SelectIdpDto selectIdpDto) {
+    public Response selectIdentityProvider(@PathParam("sessionId") String sessionId, @Valid SelectIdpDto selectIdpDto) throws SessionNotFoundException {
         var issuer = sessionClient.get(sessionId, "issuer");
 
         var enabledIdps = configServiceClient
@@ -60,7 +61,7 @@ public class AuthnRequestFromTransactionResource {
     @GET
     @Path("/{sessionId}/sign-in-process-details")
     @Timed
-    public Map<String, Object> getSignInProcessDto(@PathParam("sessionId") String sessionId) {
+    public Map<String, Object> getSignInProcessDto(@PathParam("sessionId") String sessionId) throws SessionNotFoundException {
         var requestIssuerId = sessionClient.get(sessionId, "issuer");
         var eidasEnabled = configServiceClient.isEidasEnabled(requestIssuerId);
         return new HashMap<>() {{
@@ -72,7 +73,7 @@ public class AuthnRequestFromTransactionResource {
     @GET
     @Path("/{sessionId}/registration-request-issuer-id")
     @Timed
-    public String getRequestIssuerId(@PathParam("sessionId") String sessionId) {
+    public String getRequestIssuerId(@PathParam("sessionId") String sessionId) throws SessionNotFoundException {
         return sessionClient.get(sessionId, "issuer");
     }
 }

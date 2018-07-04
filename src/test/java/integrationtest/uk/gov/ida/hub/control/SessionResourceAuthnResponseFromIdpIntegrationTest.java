@@ -18,10 +18,42 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVerifyControlIntegrationTest {
-    @Ignore
     @Test
     public void responsePostShouldHandleErrorResponseFromSamlEngine() {
-        throw new NotImplementedException("Test responsePostShouldHandleErrorResponseFromSamlEngine has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        redisClient.hset("session:some-session-id", "isRegistration", "true");
+
+        configureFor(configPort());
+        stubFor(
+            get(urlEqualTo("/config/transactions/https:%2F%2Fsome-service-entity-id/matching-service-entity-id"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("https://some-matching-service-entity-id"))
+        );
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/saml-engine/translate-idp-authn-response"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withStatus(400).withBody("{" +
+                    "\"exceptionType\":\"INVALID_SAML\"," +
+                    "\"clientMessage\":\"Some exception message\"" +
+                    "}"))
+        );
+
+        Map<String, String> request = mapOf(
+            "samlResponse", "some-saml-response",
+            "sessionId", "some-session-id",
+            "principalIPAddressAsSeenByHub", "some-ip-address"
+        );
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/session/%s/idp-authn-response", verifyControl.getLocalPort(), "some-session-id"))
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        var responseBody = response.readEntity(new GenericType<Map<String, Object>>() {{ }});
+        assertThat(responseBody).contains(
+            new AbstractMap.SimpleEntry<>("exceptionType", "INVALID_SAML")
+        );
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.IdpSelected.NAME);
     }
 
     @Test
@@ -254,9 +286,18 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
         throw new NotImplementedException("Test responsePostShouldReturnForbiddenWhenIdpIsNotAvailable has not been implemented");
     }
 
-    @Ignore
     @Test
     public void responsePostShouldReturnBadRequestSessionDoesNotExist() {
-        throw new NotImplementedException("Test responsePostShouldReturnBadRequestSessionDoesNotExist has not been implemented");
+        Map<String, String> request = mapOf(
+            "samlResponse", "some-saml-response",
+            "sessionId", "some-session-id",
+            "principalIPAddressAsSeenByHub", "some-ip-address"
+        );
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/session/%s/idp-authn-response", verifyControl.getLocalPort(), "some-session-id"))
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(400);
     }
 }

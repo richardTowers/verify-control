@@ -3,6 +3,7 @@ package uk.gov.ida.hub.control.resources;
 import com.codahale.metrics.annotation.Timed;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
+import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.Consumes;
@@ -29,7 +30,7 @@ public class Cycle3DataResource {
     @POST
     @Path("/submit")
     @Timed
-    public void submitCycle3Data(@PathParam("sessionId") String sessionId, Map<String, String> cycle3UserInput) {
+    public void submitCycle3Data(@PathParam("sessionId") String sessionId, Map<String, String> cycle3UserInput) throws SessionNotFoundException {
         var session = sessionClient.getAll(sessionId);
         samlSoapProxyClient.makeCycle3MatchingServiceRequest(sessionId, session.get("requestId"), session.get("issuer"));
         VerifySessionState state = sessionClient.getState(sessionId);

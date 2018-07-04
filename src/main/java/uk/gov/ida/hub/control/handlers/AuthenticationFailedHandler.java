@@ -1,6 +1,7 @@
 package uk.gov.ida.hub.control.handlers;
 
 import uk.gov.ida.hub.control.clients.SessionClient;
+import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.core.Response;
@@ -12,7 +13,7 @@ public class AuthenticationFailedHandler {
     public static Response handleAuthenticationFailed(
         SessionClient sessionClient,
         String sessionId
-    ) {
+    ) throws SessionNotFoundException {
         var state = sessionClient.getState(sessionId);
         var stateToTransitionTo = state.authenticationFailed();
 
@@ -23,7 +24,7 @@ public class AuthenticationFailedHandler {
         SessionClient sessionClient,
         String sessionId,
         VerifySessionState stateToTransitionTo
-    ) {
+    ) throws SessionNotFoundException {
         var isRegistration = parseBoolean(sessionClient.get(sessionId, "isRegistration"));
         sessionClient.setState(sessionId, stateToTransitionTo);
         return Response.ok(mapOf(

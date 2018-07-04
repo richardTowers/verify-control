@@ -7,6 +7,7 @@ import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SamlEngineClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
+import uk.gov.ida.hub.control.errors.ApiBadRequestException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 
 import javax.validation.Valid;
@@ -74,7 +75,7 @@ public class SessionResource {
 
     @GET
     @Path("/{sessionId}/idp-authn-request-from-hub")
-    public Response getIdpAuthnRequestFromHub(@PathParam("sessionId") String sessionId) {
+    public Response getIdpAuthnRequestFromHub(@PathParam("sessionId") String sessionId) throws SessionNotFoundException {
         var selectedIdp = sessionClient.get(sessionId, "selectedIdp");
 
         var authnRequest = samlEngineClient.generateIdpAuthnRequest(selectedIdp);
@@ -88,7 +89,7 @@ public class SessionResource {
 
     @POST
     @Path("/{sessionId}/idp-authn-response")
-    public Response receiveIdpAuthnResponse(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) {
+    public Response receiveIdpAuthnResponse(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) throws SessionNotFoundException, ApiBadRequestException {
         var issuer = sessionClient.get(sessionId, "issuer");
         var matchingServiceEntityId = configServiceClient.getMatchingServiceEntityId(issuer);
 

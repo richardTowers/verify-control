@@ -2,9 +2,11 @@ package uk.gov.ida.hub.control.clients;
 
 import com.google.common.collect.ImmutableList;
 import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
+import uk.gov.ida.hub.control.errors.ApiBadRequestException;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
 import static javax.ws.rs.client.Entity.entity;
@@ -41,9 +43,10 @@ public class SamlEngineClient {
         String sessionId, String samlResponse,
         String principalIPAddressAsSeenByHub,
         String matchingServiceEntityId
-    ) {
-        return samlEngineWebTarget
-            .path("/saml-engine/translate-idp-authn-response")
+    ) throws ApiBadRequestException {
+        String path = "/saml-engine/translate-idp-authn-response";
+        Response response = samlEngineWebTarget
+            .path(path)
             .request(APPLICATION_JSON_TYPE)
             .buildPost(entity(mapOf(
                 "samlResponse", samlResponse,
@@ -51,7 +54,19 @@ public class SamlEngineClient {
                 "principalIPAddressAsSeenByHub", principalIPAddressAsSeenByHub,
                 "matchingServiceEntityId", matchingServiceEntityId
             ), APPLICATION_JSON_TYPE))
-            .invoke()
-            .readEntity(new GenericType<Map<String, String>>() {{}});
+            .invoke();
+
+        var responseBody = response.readEntity(new GenericType<Map<String, String>>() {{ }});
+
+        switch (response.getStatus()) {
+            case 200:
+                return responseBody;
+            default:
+                throw new ApiBadRequestException(
+                    path,
+                    responseBody.get("clientMessage"),
+                    responseBody.get("exceptionType")
+                );
+        }
     }
 }
