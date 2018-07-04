@@ -5,6 +5,7 @@ import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.dtos.LevelOfAssurance;
 import uk.gov.ida.hub.control.errors.ConditionNotMetException;
+import uk.gov.ida.hub.control.errors.IdpDisabledException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
@@ -24,7 +25,7 @@ public class AuthenticationSuccessHandler {
         String sessionId,
         String matchingServiceEntityId,
         Map<String, String> samlEngineResponse
-    ) throws SessionNotFoundException, ConditionNotMetException {
+    ) throws SessionNotFoundException, ConditionNotMetException, IdpDisabledException {
         var state = sessionClient.getState(sessionId);
         var stateToTransitionTo = state.authenticationSucceeded();
 
@@ -47,7 +48,7 @@ public class AuthenticationSuccessHandler {
         String matchingServiceEntityId,
         Map<String, String> samlEngineResponse,
         VerifySessionState.Matching stateToTransitionTo
-    ) throws SessionNotFoundException, ConditionNotMetException {
+    ) throws SessionNotFoundException, ConditionNotMetException, IdpDisabledException {
         var session = sessionClient.getAll(sessionId);
         var allowedLevelsOfAssurance = configServiceClient.getLevelsOfAssurance(session.get("issuer"));
 
@@ -61,8 +62,16 @@ public class AuthenticationSuccessHandler {
                     levelOfAssuranceAchieved
             );
         }
-        var selectedIdp = session.get("selectedIdp");
+        var enabledIdps = configServiceClient.getEnabledIdps(
+            sessionClient.get(sessionId, "issuer"),
+            levelOfAssuranceAchieved,
+            parseBoolean(sessionClient.get(sessionId, "isRegistration"))
+        );
         String issuer = samlEngineResponse.get("issuer");
+        if (!enabledIdps.contains(issuer)) {
+            throw new IdpDisabledException(issuer);
+        }
+        var selectedIdp = session.get("selectedIdp");
         if (!selectedIdp.equals(issuer)) {
             throw new ConditionNotMetException(
                 "Issuer in response does not match selected IdP. Expected " + selectedIdp + " but got " + issuer
