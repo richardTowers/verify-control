@@ -25,6 +25,7 @@ public interface VerifySessionState {
     default Matching authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
     default AwaitingCycle3Data awaitCycle3Data() { throw new StateProcessingException("awaitCycle3Data", this); }
     default Cycle3MatchRequestSent submitCycle3Request() { throw new StateProcessingException("submitCycle3Request", this); }
+    default FraudResponse fraudResponse() { throw new StateProcessingException("fraudResponse", this); }
 
     // Methods
     String getName();
@@ -54,6 +55,10 @@ public interface VerifySessionState {
 
         @Transition
         @Override
+        public FraudResponse fraudResponse() { return new FraudResponse(); }
+
+        @Transition
+        @Override
         public Matching authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
 
         @Override
@@ -67,6 +72,14 @@ public interface VerifySessionState {
         @Transition
         @Override
         public IdpSelected selectIdp() { return new IdpSelected(); }
+
+        @Override
+        public String getName() { return NAME; }
+    }
+
+    @State(name = FraudResponse.NAME)
+    final class FraudResponse implements VerifySessionState {
+        public static final String NAME = "fraudResponse";
 
         @Override
         public String getName() { return NAME; }

@@ -21,8 +21,9 @@ public class StatechartVisualisationTest {
     public void createStateChart() {
         Set<StateHierarchy> stateHierarchy = StatechartAnalyzer.getStateHierarchy(
             VerifySessionState.Started.class,
-            VerifySessionState.AuthnFailed.class,
             VerifySessionState.IdpSelected.class,
+            VerifySessionState.AuthnFailed.class,
+            VerifySessionState.FraudResponse.class,
             VerifySessionState.Matching.class,
             VerifySessionState.AwaitingCycle3Data.class,
             VerifySessionState.Cycle0And1MatchRequestSent.class,

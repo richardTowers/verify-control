@@ -30,10 +30,41 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
         throw new NotImplementedException("Test responsePostShouldHandleRequesterErrorResponse has not been implemented");
     }
 
-    @Ignore
     @Test
     public void responsePostShouldHandleFraudResponse() {
-        throw new NotImplementedException("Test responsePostShouldHandleFraudResponse has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.NAME);
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        redisClient.hset("session:some-session-id", "isRegistration", "true");
+
+        configureFor(configPort());
+        stubFor(
+            get(urlEqualTo("/config/transactions/https:%2F%2Fsome-service-entity-id/matching-service-entity-id"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("https://some-matching-service-entity-id"))
+        );
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/saml-engine/translate-idp-authn-response"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"status\":\"RequesterError\"}"))
+        );
+
+        Map<String, String> request = mapOf(
+            "samlResponse", "some-saml-response",
+            "sessionId", "some-session-id",
+            "principalIPAddressAsSeenByHub", "some-ip-address"
+        );
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/session/%s/idp-authn-response", verifyControl.getLocalPort(), "some-session-id"))
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        var responseBody = response.readEntity(new GenericType<Map<String, Object>>() {{ }});
+        assertThat(responseBody).containsExactly(
+            new AbstractMap.SimpleEntry<>("sessionId", "some-session-id"),
+            new AbstractMap.SimpleEntry<>("result", "OTHER"),
+            new AbstractMap.SimpleEntry<>("isRegistration", true)
+        );
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.FraudResponse.NAME);
     }
 
     @Test
@@ -70,6 +101,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
             new AbstractMap.SimpleEntry<>("result", "OTHER"),
             new AbstractMap.SimpleEntry<>("isRegistration", true)
         );
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AuthnFailed.NAME);
     }
 
     @Test
@@ -106,6 +138,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
             new AbstractMap.SimpleEntry<>("result", "OTHER"),
             new AbstractMap.SimpleEntry<>("isRegistration", true)
         );
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AuthnFailed.NAME);
     }
 
     @Test

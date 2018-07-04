@@ -28,6 +28,7 @@ import static org.joda.time.DateTimeZone.UTC;
 import static org.joda.time.format.ISODateTimeFormat.dateTime;
 import static uk.gov.ida.hub.control.handlers.AuthenticationFailedHandler.handleAuthenticationFailed;
 import static uk.gov.ida.hub.control.handlers.AuthenticationSuccessHandler.handleAuthenticationSuccess;
+import static uk.gov.ida.hub.control.handlers.FraudResponseHandler.handleFraudResponse;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 @Path("/policy/session")
@@ -74,7 +75,7 @@ public class SessionResource {
     @GET
     @Path("/{sessionId}/idp-authn-request-from-hub")
     public Response getIdpAuthnRequestFromHub(@PathParam("sessionId") String sessionId) {
-        String selectedIdp = sessionClient.get(sessionId, "selectedIdp");
+        var selectedIdp = sessionClient.get(sessionId, "selectedIdp");
 
         var authnRequest = samlEngineClient.generateIdpAuthnRequest(selectedIdp);
 
@@ -104,6 +105,8 @@ public class SessionResource {
             case "NoAuthenticationContext":
             case "AuthenticationFailed":
                 return handleAuthenticationFailed(sessionClient, sessionId);
+            case "RequesterError":
+                return handleFraudResponse(sessionClient, sessionId);
             case "Success": {
                 return handleAuthenticationSuccess(
                     sessionClient,
