@@ -22,8 +22,7 @@ public class SessionClient {
 
     public String get(String sessionId, String key) throws SessionNotFoundException {
         checkSessionExists(sessionId);
-        String value = redisClient.hget(sessionKey(sessionId), key);
-        return value;
+        return redisClient.hget(sessionKey(sessionId), key);
     }
 
     public void set(String sessionId, String key, String value) throws SessionNotFoundException {
@@ -55,8 +54,8 @@ public class SessionClient {
     }
 
     private void checkSessionExists(String sessionId) throws SessionNotFoundException {
-        String sessionKey = sessionKey(sessionId);
-        Long keyCount = redisClient.exists(sessionKey);
+        var sessionKey = sessionKey(sessionId);
+        var keyCount = redisClient.exists(sessionKey);
         if (keyCount != 1) {
             throw new SessionNotFoundException("Expected to find one key '" + sessionKey + "' but found " + keyCount);
         }
