@@ -106,7 +106,12 @@ public class SessionResource {
             case "AuthenticationFailed":
                 return handleAuthenticationFailed(sessionClient, sessionId);
             case "RequesterError":
-                return handleFraudResponse(sessionClient, sessionId);
+                if (samlEngineResponse.get("fraudIndicator") != null) {
+                    return handleFraudResponse(sessionClient, sessionId);
+                }
+                else {
+                    return handleAuthenticationFailed(sessionClient, sessionId);
+                }
             case "Success": {
                 return handleAuthenticationSuccess(
                     sessionClient,
