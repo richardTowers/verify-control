@@ -31,6 +31,16 @@ public class ConfigServiceClient {
             .readEntity(new GenericType<List<String>>() { });
     }
 
+    public List<LevelOfAssurance> getLevelsOfAssurance(String issuer) {
+        return configServiceWebTarget
+            .path("/config/transactions/{entityId}/levels-of-assurance")
+            .resolveTemplate("entityId", issuer)
+            .request(APPLICATION_JSON_TYPE)
+            .buildGet()
+            .invoke()
+            .readEntity(new GenericType<List<LevelOfAssurance>>() {});
+    }
+
     public String getMatchingServiceEntityId(String serviceEntityId) {
         return configServiceWebTarget
             .path("/config/transactions/{entityId}/matching-service-entity-id")

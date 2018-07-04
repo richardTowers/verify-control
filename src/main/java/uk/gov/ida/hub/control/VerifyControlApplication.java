@@ -4,6 +4,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import uk.gov.ida.hub.control.errors.ApiBadRequestException;
+import uk.gov.ida.hub.control.errors.ConditionNotMetException;
 import uk.gov.ida.hub.control.errors.EntityNotEnabledException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.errors.StateProcessingException;
@@ -42,6 +43,7 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
         jersey.register(new StateProcessingException.Mapper());
         jersey.register(new EntityNotEnabledException.Mapper());
         jersey.register(new ApiBadRequestException.Mapper());
+        jersey.register(new ConditionNotMetException.Mapper());
     }
 
 }
