@@ -1,11 +1,10 @@
 package uk.gov.ida.hub.control.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
+import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.dtos.SelectIdpDto;
 import uk.gov.ida.hub.control.errors.EntityNotEnabledException;
-import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.validation.Valid;
 import javax.ws.rs.GET;
@@ -18,11 +17,11 @@ import java.util.Map;
 
 @Path("/policy/received-authn-request")
 public class AuthnRequestFromTransactionResource {
-    private final RedisCommands<String, String> redisClient;
+    private final SessionClient sessionClient;
     private final ConfigServiceClient configServiceClient;
 
-    public AuthnRequestFromTransactionResource(RedisCommands<String, String> redisClient, ConfigServiceClient configServiceClient) {
-        this.redisClient = redisClient;
+    public AuthnRequestFromTransactionResource(SessionClient sessionClient, ConfigServiceClient configServiceClient) {
+        this.sessionClient = sessionClient;
         this.configServiceClient = configServiceClient;
     }
 
@@ -30,19 +29,19 @@ public class AuthnRequestFromTransactionResource {
     @Path("/{sessionId}/select-identity-provider")
     @Timed
     public Response selectIdentityProvider(@PathParam("sessionId") String sessionId, @Valid SelectIdpDto selectIdpDto) {
-        var issuer = redisClient.hget("session:" + sessionId, "issuer");
+        var issuer = sessionClient.get(sessionId, "issuer");
 
         var enabledIdps = configServiceClient
             .getEnabledIdps(issuer, selectIdpDto.getRequestedLoa(), selectIdpDto.isRegistration());
 
-        var originalState = VerifySessionState.forName(redisClient.get("state:" + sessionId));
+        var originalState = sessionClient.getState(sessionId);
         if (!enabledIdps.contains(selectIdpDto.getSelectedIdpEntityId())) {
             throw new EntityNotEnabledException(selectIdpDto.getSelectedIdpEntityId(), originalState);
         }
-        redisClient.hset("session:" + sessionId, "isRegistration", Boolean.toString(selectIdpDto.isRegistration()));
-        redisClient.hset("session:" + sessionId, "selectedIdp", selectIdpDto.getSelectedIdpEntityId());
+        sessionClient.set(sessionId, "isRegistration", Boolean.toString(selectIdpDto.isRegistration()));
+        sessionClient.set(sessionId, "selectedIdp", selectIdpDto.getSelectedIdpEntityId());
         var newState = originalState.selectIdp();
-        redisClient.set("state:" + sessionId, newState.getName());
+        sessionClient.setState(sessionId, newState);
         return Response.status(201).build();
     }
 
@@ -62,7 +61,7 @@ public class AuthnRequestFromTransactionResource {
     @Path("/{sessionId}/sign-in-process-details")
     @Timed
     public Map<String, Object> getSignInProcessDto(@PathParam("sessionId") String sessionId) {
-        var requestIssuerId = redisClient.hget("session:" + sessionId, "issuer");
+        var requestIssuerId = sessionClient.get(sessionId, "issuer");
         var eidasEnabled = configServiceClient.isEidasEnabled(requestIssuerId);
         return new HashMap<>() {{
             put("requestIssuerId", requestIssuerId);
@@ -74,6 +73,6 @@ public class AuthnRequestFromTransactionResource {
     @Path("/{sessionId}/registration-request-issuer-id")
     @Timed
     public String getRequestIssuerId(@PathParam("sessionId") String sessionId) {
-        return redisClient.hget("session:" + sessionId, "issuer");
+        return sessionClient.get(sessionId, "issuer");
     }
 }

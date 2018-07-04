@@ -1,8 +1,8 @@
 package uk.gov.ida.hub.control.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
+import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.Consumes;
@@ -15,14 +15,14 @@ import java.util.Map;
 @Path("/policy/received-authn-request/{sessionId}/cycle-3-attribute")
 @Consumes(MediaType.APPLICATION_JSON)
 public class Cycle3DataResource {
-    private final RedisCommands<String, String> redisClient;
+    private final SessionClient sessionClient;
     private final SamlSoapProxyClient samlSoapProxyClient;
 
     public Cycle3DataResource(
-        RedisCommands<String, String> redisClient,
+        SessionClient sessionClient,
         SamlSoapProxyClient samlSoapProxyClient
     ) {
-        this.redisClient = redisClient;
+        this.sessionClient = sessionClient;
         this.samlSoapProxyClient = samlSoapProxyClient;
     }
 
@@ -30,12 +30,9 @@ public class Cycle3DataResource {
     @Path("/submit")
     @Timed
     public void submitCycle3Data(@PathParam("sessionId") String sessionId, Map<String, String> cycle3UserInput) {
-        var stateKey = "state:" + sessionId;
-        var session = redisClient.hgetall("session:" + sessionId);
-
+        var session = sessionClient.getAll(sessionId);
         samlSoapProxyClient.makeCycle3MatchingServiceRequest(sessionId, session.get("requestId"), session.get("issuer"));
-
-        VerifySessionState state = VerifySessionState.forName(redisClient.get(stateKey));
-        redisClient.set(stateKey, state.submitCycle3Request().getName());
+        VerifySessionState state = sessionClient.getState(sessionId);
+        sessionClient.setState(sessionId, state.submitCycle3Request());
     }
 }

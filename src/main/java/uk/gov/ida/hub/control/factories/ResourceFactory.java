@@ -8,6 +8,7 @@ import uk.gov.ida.hub.control.VerifyControlConfiguration;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SamlEngineClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
+import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
 import uk.gov.ida.hub.control.resources.Cycle3DataResource;
 import uk.gov.ida.hub.control.resources.MatchingServiceResponseResource;
@@ -34,7 +35,7 @@ public class ResourceFactory {
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
         return new SessionResource(
-            redisClient,
+            new SessionClient(redisClient),
             new SamlEngineClient(samlEngineTarget),
             new ConfigServiceClient(configServiceTarget),
             new SamlSoapProxyClient(samlSoapProxyWebTarget));
@@ -44,18 +45,18 @@ public class ResourceFactory {
         var client = new JerseyClientBuilder(environment).build(AuthnRequestFromTransactionResource.class.getSimpleName());
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         return new AuthnRequestFromTransactionResource(
-            redisClient,
+            new SessionClient(redisClient),
             new ConfigServiceClient(configServiceTarget)
         );
     }
 
     public MatchingServiceResponseResource createMatchingServiceResponseResource() {
-        return new MatchingServiceResponseResource(redisClient);
+        return new MatchingServiceResponseResource(new SessionClient(redisClient));
     }
 
     public Cycle3DataResource createCycle3DataResource() {
         var client = new JerseyClientBuilder(environment).build(Cycle3DataResource.class.getSimpleName());
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
-        return new Cycle3DataResource(redisClient, new SamlSoapProxyClient(samlSoapProxyWebTarget));
+        return new Cycle3DataResource(new SessionClient(redisClient), new SamlSoapProxyClient(samlSoapProxyWebTarget));
     }
 }

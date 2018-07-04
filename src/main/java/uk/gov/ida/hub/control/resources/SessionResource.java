@@ -1,14 +1,13 @@
 package uk.gov.ida.hub.control.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import io.lettuce.core.api.sync.RedisCommands;
 import org.apache.commons.lang3.NotImplementedException;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SamlEngineClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
+import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
-import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -21,7 +20,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
-import java.util.UUID;
 
 import static java.lang.Boolean.parseBoolean;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -34,18 +32,18 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 @Path("/policy/session")
 @Produces(MediaType.APPLICATION_JSON)
 public class SessionResource {
-    private final RedisCommands<String, String> redisClient;
+    private final SessionClient sessionClient;
     private final SamlEngineClient samlEngineClient;
     private final ConfigServiceClient configServiceClient;
     private final SamlSoapProxyClient samlSoapProxyClient;
 
     public SessionResource(
-        RedisCommands<String, String> redisClient,
+        SessionClient sessionClient,
         SamlEngineClient samlEngineClient,
         ConfigServiceClient configServiceClient,
         SamlSoapProxyClient samlSoapProxyClient
     ) {
-        this.redisClient = redisClient;
+        this.sessionClient = sessionClient;
         this.samlEngineClient = samlEngineClient;
         this.configServiceClient = configServiceClient;
         this.samlSoapProxyClient = samlSoapProxyClient;
@@ -55,19 +53,14 @@ public class SessionResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
     public Response createSession(@Valid @NotNull AuthnRequest authnRequest) {
-        var sessionId = UUID.randomUUID().toString();
-
         var result = samlEngineClient.translateRpAuthnRequest(authnRequest.getSamlRequest());
-
-        var session = mapOf(
+        var sessionId = sessionClient.initialise(mapOf(
             "start", now(UTC).toString(dateTime()),
             "issuer", result.get("issuer"),
             "requestId", result.get("requestId"),
             "relayState", authnRequest.getRelayState(),
             "ipAddress", authnRequest.getPrincipalIPAddressAsSeenByHub()
-        );
-        redisClient.hmset("session:" + sessionId, session);
-
+        ));
         return created(null).entity(sessionId).build();
     }
 
@@ -80,22 +73,22 @@ public class SessionResource {
     @GET
     @Path("/{sessionId}/idp-authn-request-from-hub")
     public Response getIdpAuthnRequestFromHub(@PathParam("sessionId") String sessionId) {
-        String selectedIdp = redisClient.hget("session:" + sessionId, "selectedIdp");
+        String selectedIdp = sessionClient.get(sessionId, "selectedIdp");
 
         var authnRequest = samlEngineClient.generateIdpAuthnRequest(selectedIdp);
 
         return Response.ok().entity(mapOf(
             "samlRequest", authnRequest.getSamlRequest(),
             "postEndpoint", authnRequest.getSsoUri(),
-            "registering", parseBoolean(redisClient.hget("session:" + sessionId, "isRegistration"))
+            "registering", parseBoolean(sessionClient.get(sessionId, "isRegistration"))
         )).build();
     }
 
     @POST
     @Path("/{sessionId}/idp-authn-response")
     public Response receiveIdpAuthnResponse(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) {
-        var session = redisClient.hgetall("session:" + sessionId);
-        var originalState = VerifySessionState.forName(redisClient.get("state:" + sessionId));
+        var session = sessionClient.getAll(sessionId);
+        var originalState = sessionClient.getState(sessionId);
         var issuer = session.get("issuer");
 
         var matchingServiceEntityId = configServiceClient.getMatchingServiceEntityId(issuer);
@@ -112,7 +105,7 @@ public class SessionResource {
         switch (status) {
             case "AuthenticationFailed": {
                 var newState = originalState.authenticationFailed();
-                redisClient.set("state:" + sessionId, newState.getName());
+                sessionClient.setState(sessionId, newState);
                 return Response.ok(mapOf(
                     "sessionId", sessionId,
                     "result", "OTHER",
@@ -136,7 +129,7 @@ public class SessionResource {
                     matchingServiceConfig.get("onboarding")
                 );
 
-                redisClient.set("state:" + sessionId, newState.getName());
+                sessionClient.setState(sessionId, newState);
                 return Response.ok(mapOf(
                     "sessionId", sessionId,
                     "result", "SUCCESS",
