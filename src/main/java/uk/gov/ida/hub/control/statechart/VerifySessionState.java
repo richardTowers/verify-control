@@ -31,48 +31,32 @@ public interface VerifySessionState {
     // Methods
     String getName();
 
-
-
     // States
     @State(name = Started.NAME, initial = true)
     final class Started implements VerifySessionState {
         public static final String NAME = "started";
 
-        @Override
-        @Transition
-        public IdpSelected selectIdp() { return new IdpSelected(); }
+        @Override @Transition public IdpSelected selectIdp() { return new IdpSelected(); }
 
-        @Override
-        public String getName() { return NAME; }
+        @Override public String getName() { return NAME; }
     }
 
     @State(name = IdpSelected.NAME)
     final class IdpSelected implements VerifySessionState {
         public static final String NAME = "idpSelected";
 
-        @Transition
-        @Override
-        public AuthnFailed authenticationFailed() { return new AuthnFailed(); }
+        @Transition @Override public AuthnFailed authenticationFailed() { return new AuthnFailed(); }
+        @Transition @Override public FraudResponse fraudResponse() { return new FraudResponse(); }
+        @Transition @Override public Matching authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
 
-        @Transition
-        @Override
-        public FraudResponse fraudResponse() { return new FraudResponse(); }
-
-        @Transition
-        @Override
-        public Matching authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
-
-        @Override
-        public String getName() { return NAME; }
+        @Override public String getName() { return NAME; }
     }
 
     @State(name = AuthnFailed.NAME)
     final class AuthnFailed implements VerifySessionState {
         public static final String NAME = "authnFailed";
 
-        @Transition
-        @Override
-        public IdpSelected selectIdp() { return new IdpSelected(); }
+        @Transition @Override public IdpSelected selectIdp() { return new IdpSelected(); }
 
         @Override
         public String getName() { return NAME; }
@@ -82,8 +66,7 @@ public interface VerifySessionState {
     final class FraudResponse implements VerifySessionState {
         public static final String NAME = "fraudResponse";
 
-        @Override
-        public String getName() { return NAME; }
+        @Override public String getName() { return NAME; }
     }
 
     @State(name = Matching.NAME)
@@ -98,13 +81,8 @@ public interface VerifySessionState {
     final class Cycle0And1MatchRequestSent extends Matching {
         public static final String NAME = "cycle0And1MatchRequestSent";
 
-        @Transition
-        @Override
-        public Match match() { return new Match(); }
-
-        @Transition
-        @Override
-        public AwaitingCycle3Data awaitCycle3Data() { return new AwaitingCycle3Data(); }
+        @Transition @Override public Match match() { return new Match(); }
+        @Transition @Override public AwaitingCycle3Data awaitCycle3Data() { return new AwaitingCycle3Data(); }
 
         @Override
         public String getName() { return NAME; }
@@ -114,31 +92,24 @@ public interface VerifySessionState {
     final class AwaitingCycle3Data extends Matching {
         public static final String NAME = "awaitingCycle3Data";
 
-        @Transition
-        @Override
-        public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
+        @Transition @Override public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
 
-        @Override
-        public String getName() { return NAME; }
+        @Override public String getName() { return NAME; }
     }
 
     @State(name = Match.NAME)
     final class Match implements VerifySessionState {
         public static final String NAME = "match";
 
-        @Override
-        public String getName() { return NAME; }
+        @Override public String getName() { return NAME; }
     }
 
     @State(name = Cycle3MatchRequestSent.NAME)
     final class Cycle3MatchRequestSent extends Matching {
         public static final String NAME = "cycle3MatchRequestSent";
 
-        @Transition
-        @Override
-        public Match match() { return new Match(); }
+        @Transition @Override public Match match() { return new Match(); }
 
-        @Override
-        public String getName() { return NAME; }
+        @Override public String getName() { return NAME; }
     }
 }
