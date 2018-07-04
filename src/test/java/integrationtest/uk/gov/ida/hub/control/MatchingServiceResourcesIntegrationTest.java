@@ -30,23 +30,23 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
     }
     @Ignore
     @Test
-    public void responseFromMatchingService_shouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle1MatchRequest() {
-        throw new NotImplementedException("Test responseFromMatchingService_shouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle1MatchRequest has not been implemented");
+    public void responseFromMatchingServiceShouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle1MatchRequest() {
+        throw new NotImplementedException("Test responseFromMatchingServiceShouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle1MatchRequest has not been implemented");
     }
     @Ignore
     @Test
-    public void responseFromMatchingService_shouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle3MatchRequest() {
-        throw new NotImplementedException("Test responseFromMatchingService_shouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle3MatchRequest has not been implemented");
+    public void responseFromMatchingServiceShouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle3MatchRequest() {
+        throw new NotImplementedException("Test responseFromMatchingServiceShouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle3MatchRequest has not been implemented");
     }
     @Ignore
     @Test
-    public void responseProcessingDetails_shouldReturnSuccessResponse_whenNoMatchWithC3Enabled_userAccountCreationAttributesAreFetched() {
-        throw new NotImplementedException("Test responseProcessingDetails_shouldReturnSuccessResponse_whenNoMatchWithC3Enabled_userAccountCreationAttributesAreFetched has not been implemented");
+    public void responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3EnabledUserAccountCreationAttributesAreFetched() {
+        throw new NotImplementedException("Test responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3EnabledUserAccountCreationAttributesAreFetched has not been implemented");
     }
     @Ignore
     @Test
-    public void responseProcessingDetails_shouldReturnSuccessResponse_whenNoMatchWithC3Disabled_userAccountCreationAttributesAreFetched() {
-        throw new NotImplementedException("Test responseProcessingDetails_shouldReturnSuccessResponse_whenNoMatchWithC3Disabled_userAccountCreationAttributesAreFetched has not been implemented");
+    public void responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3DisabledUserAccountCreationAttributesAreFetched() {
+        throw new NotImplementedException("Test responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3DisabledUserAccountCreationAttributesAreFetched has not been implemented");
     }
     @Ignore
     @Test
@@ -81,32 +81,32 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
 
     @Ignore
     @Test
-    public void isResponseFromHubReady_shouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle3() {
-        throw new NotImplementedException("Test isResponseFromHubReady_shouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle3 has not been implemented");
+    public void isResponseFromHubReadyShouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle3() {
+        throw new NotImplementedException("Test isResponseFromHubReadyShouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle3 has not been implemented");
     }
     @Ignore
     @Test
-    public void isResponseFromHubReady_shouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle1() {
-        throw new NotImplementedException("Test isResponseFromHubReady_shouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle1 has not been implemented");
+    public void isResponseFromHubReadyShouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle1() {
+        throw new NotImplementedException("Test isResponseFromHubReadyShouldReturnFailedStatusWhenAProblemHasOccurredWhilstMatchingCycle1 has not been implemented");
     }
     @Ignore
     @Test
-    public void getCycle3AttributeRequestData_shouldReturnExpectedAttributeData() {
-        throw new NotImplementedException("Test getCycle3AttributeRequestData_shouldReturnExpectedAttributeData has not been implemented");
+    public void getCycle3AttributeRequestDataShouldReturnExpectedAttributeData() {
+        throw new NotImplementedException("Test getCycle3AttributeRequestDataShouldReturnExpectedAttributeData has not been implemented");
     }
     @Ignore
     @Test
-    public void isResponseFromHubReady_shouldThrowExceptionWhenCycle3MatchingServiceWaitPeriodHasBeenExceeded() {
-        throw new NotImplementedException("Test isResponseFromHubReady_shouldThrowExceptionWhenCycle3MatchingServiceWaitPeriodHasBeenExceeded has not been implemented");
+    public void isResponseFromHubReadyShouldThrowExceptionWhenCycle3MatchingServiceWaitPeriodHasBeenExceeded() {
+        throw new NotImplementedException("Test isResponseFromHubReadyShouldThrowExceptionWhenCycle3MatchingServiceWaitPeriodHasBeenExceeded has not been implemented");
     }
     @Ignore
     @Test
-    public void isResponseFromHubReady_shouldThrowExceptionWhenMatchingServiceWaitPeriodHasBeenExceeded() {
-        throw new NotImplementedException("Test isResponseFromHubReady_shouldThrowExceptionWhenMatchingServiceWaitPeriodHasBeenExceeded has not been implemented");
+    public void isResponseFromHubReadyShouldThrowExceptionWhenMatchingServiceWaitPeriodHasBeenExceeded() {
+        throw new NotImplementedException("Test isResponseFromHubReadyShouldThrowExceptionWhenMatchingServiceWaitPeriodHasBeenExceeded has not been implemented");
     }
     @Ignore
     @Test
-    public void isResponseFromHubReady_shouldTellFrontendToShowErrorPageWhenMSRespondsButSamlEngineThrowsInvalidSamlError() {
-        throw new NotImplementedException("Test isResponseFromHubReady_shouldTellFrontendToShowErrorPageWhenMSRespondsButSamlEngineThrowsInvalidSamlError has not been implemented");
+    public void isResponseFromHubReadyShouldTellFrontendToShowErrorPageWhenMSRespondsButSamlEngineThrowsInvalidSamlError() {
+        throw new NotImplementedException("Test isResponseFromHubReadyShouldTellFrontendToShowErrorPageWhenMSRespondsButSamlEngineThrowsInvalidSamlError has not been implemented");
     }
 }
