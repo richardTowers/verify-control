@@ -1,7 +1,7 @@
 Verify Control
 ==============
 
-![38% Done](http://progressed.io/bar/38)
+![57% Done](http://progressed.io/bar/57)
 [![Build Status](https://travis-ci.org/richardTowers/verify-control.svg?branch=master)](https://travis-ci.org/richardTowers/verify-control)
 
 <a href=https://youtu.be/NmmWkJtuxz4>
@@ -47,6 +47,7 @@ Scope
 ### Out of scope initially, but required for a working service:
 
 * Reporting events to event sink
+* eIDAS support
 
 ### Not implemented, of questionable value:
 
