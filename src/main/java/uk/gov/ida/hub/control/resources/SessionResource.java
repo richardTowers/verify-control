@@ -1,14 +1,12 @@
 package uk.gov.ida.hub.control.resources;
 
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.apache.commons.lang3.NotImplementedException;
 import uk.gov.ida.hub.control.api.AuthnRequest;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
+import uk.gov.ida.hub.control.clients.SamlEngineClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
-import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
@@ -20,15 +18,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.UUID;
 
 import static java.lang.Boolean.parseBoolean;
-import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.created;
 import static org.joda.time.DateTime.now;
@@ -40,18 +35,18 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 @Produces(MediaType.APPLICATION_JSON)
 public class SessionResource {
     private final RedisCommands<String, String> redisClient;
-    private final WebTarget samlEngineWebTarget;
+    private final SamlEngineClient samlEngineClient;
     private final ConfigServiceClient configServiceClient;
     private final SamlSoapProxyClient samlSoapProxyClient;
 
     public SessionResource(
         RedisCommands<String, String> redisClient,
-        WebTarget samlEngineWebTarget,
+        SamlEngineClient samlEngineClient,
         ConfigServiceClient configServiceClient,
         SamlSoapProxyClient samlSoapProxyClient
     ) {
         this.redisClient = redisClient;
-        this.samlEngineWebTarget = samlEngineWebTarget;
+        this.samlEngineClient = samlEngineClient;
         this.configServiceClient = configServiceClient;
         this.samlSoapProxyClient = samlSoapProxyClient;
     }
@@ -62,11 +57,7 @@ public class SessionResource {
     public Response createSession(@Valid @NotNull AuthnRequest authnRequest) {
         var sessionId = UUID.randomUUID().toString();
 
-        var result = samlEngineWebTarget
-            .path("/saml-engine/translate-rp-authn-request")
-            .request(APPLICATION_JSON_TYPE)
-            .buildPost(entity(mapOf("samlMessage", authnRequest.getSamlRequest()), APPLICATION_JSON_TYPE))
-            .invoke(new GenericType<Map<String, String>>() {});
+        var result = samlEngineClient.translateRpAuthnRequest(authnRequest.getSamlRequest());
 
         var session = mapOf(
             "start", now(UTC).toString(dateTime()),
@@ -91,20 +82,11 @@ public class SessionResource {
     public Response getIdpAuthnRequestFromHub(@PathParam("sessionId") String sessionId) {
         String selectedIdp = redisClient.hget("session:" + sessionId, "selectedIdp");
 
-        var parameters = ImmutableMap.builder()
-            .put("idpEntityId", selectedIdp)
-            .put("levelsOfAssurance", ImmutableList.of("LEVEL_1")) // TODO get this from config
-            .build();
-
-        var samlEngineResponse = samlEngineWebTarget
-            .path("/saml-engine/generate-idp-authn-request")
-            .request(APPLICATION_JSON_TYPE)
-            .buildPost(entity(parameters, APPLICATION_JSON_TYPE))
-            .invoke(SamlRequestDto.class);
+        var authnRequest = samlEngineClient.generateIdpAuthnRequest(selectedIdp);
 
         return Response.ok().entity(mapOf(
-            "samlRequest", samlEngineResponse.getSamlRequest(),
-            "postEndpoint", samlEngineResponse.getSsoUri(),
+            "samlRequest", authnRequest.getSamlRequest(),
+            "postEndpoint", authnRequest.getSsoUri(),
             "registering", parseBoolean(redisClient.hget("session:" + sessionId, "isRegistration"))
         )).build();
     }
@@ -118,17 +100,12 @@ public class SessionResource {
 
         var matchingServiceEntityId = configServiceClient.getMatchingServiceEntityId(issuer);
 
-        var samlEngineResponse = samlEngineWebTarget
-            .path("/saml-engine/translate-idp-authn-response")
-            .request(APPLICATION_JSON_TYPE)
-            .buildPost(entity(mapOf(
-                "samlResponse", samlResponse.get("samlResponse"),
-                "sessionId", sessionId,
-                "principalIPAddressAsSeenByHub", samlResponse.get("principalIPAddressAsSeenByHub"),
-                "matchingServiceEntityId", matchingServiceEntityId
-            ), APPLICATION_JSON_TYPE))
-            .invoke()
-            .readEntity(new GenericType<Map<String, String>>() {{}});
+        var samlEngineResponse = samlEngineClient.translateIdpResponse(
+            sessionId,
+            samlResponse.get("samlResponse"),
+            samlResponse.get("principalIPAddressAsSeenByHub"),
+            matchingServiceEntityId
+        );
 
         var status = samlEngineResponse.get("status");
 

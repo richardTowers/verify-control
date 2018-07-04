@@ -6,6 +6,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.VerifyControlConfiguration;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
+import uk.gov.ida.hub.control.clients.SamlEngineClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
 import uk.gov.ida.hub.control.resources.Cycle3DataResource;
@@ -34,7 +35,7 @@ public class ResourceFactory {
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
         return new SessionResource(
             redisClient,
-            samlEngineTarget,
+            new SamlEngineClient(samlEngineTarget),
             new ConfigServiceClient(configServiceTarget),
             new SamlSoapProxyClient(samlSoapProxyWebTarget));
     }
