@@ -22,11 +22,12 @@ import javax.ws.rs.core.Response;
 import java.util.Map;
 
 import static java.lang.Boolean.parseBoolean;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.created;
 import static org.joda.time.DateTime.now;
 import static org.joda.time.DateTimeZone.UTC;
 import static org.joda.time.format.ISODateTimeFormat.dateTime;
+import static uk.gov.ida.hub.control.handlers.AuthenticationFailedHandler.handleAuthenticationFailed;
+import static uk.gov.ida.hub.control.handlers.AuthenticationSuccessHandler.handleAuthenticationSuccess;
 import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 
 @Path("/policy/session")
@@ -87,10 +88,7 @@ public class SessionResource {
     @POST
     @Path("/{sessionId}/idp-authn-response")
     public Response receiveIdpAuthnResponse(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) {
-        var session = sessionClient.getAll(sessionId);
-        var originalState = sessionClient.getState(sessionId);
-        var issuer = session.get("issuer");
-
+        var issuer = sessionClient.get(sessionId, "issuer");
         var matchingServiceEntityId = configServiceClient.getMatchingServiceEntityId(issuer);
 
         var samlEngineResponse = samlEngineClient.translateIdpResponse(
@@ -104,38 +102,17 @@ public class SessionResource {
 
         switch (status) {
             case "AuthenticationFailed": {
-                var newState = originalState.authenticationFailed();
-                sessionClient.setState(sessionId, newState);
-                return Response.ok(mapOf(
-                    "sessionId", sessionId,
-                    "result", "OTHER",
-                    "isRegistration", parseBoolean(session.get("isRegistration"))
-                )).build();
+                return handleAuthenticationFailed(sessionClient, sessionId);
             }
             case "Success": {
-                var newState = originalState.authenticationSucceeded();
-
-                var matchingServiceConfig = configServiceClient.getMatchingServiceConfig(matchingServiceEntityId);
-                samlSoapProxyClient.makeMatchingServiceRequest(
+                return handleAuthenticationSuccess(
+                    sessionClient,
+                    configServiceClient,
+                    samlSoapProxyClient,
                     sessionId,
-                    session.get("requestId"),
-                    samlEngineResponse.get("encryptedMatchingDatasetAssertion"),
-                    samlEngineResponse.get("authnStatementAssertion"),
                     matchingServiceEntityId,
-                    samlEngineResponse.get("loaAchieved"),
-                    samlEngineResponse.get("persistentId"),
-                    matchingServiceConfig.get("uri"),
-                    issuer,
-                    matchingServiceConfig.get("onboarding")
+                    samlEngineResponse
                 );
-
-                sessionClient.setState(sessionId, newState);
-                return Response.ok(mapOf(
-                    "sessionId", sessionId,
-                    "result", "SUCCESS",
-                    "isRegistration", parseBoolean(session.get("isRegistration")),
-                    "loaAchieved", samlEngineResponse.get("loaAchieved")
-                ), APPLICATION_JSON_TYPE).build();
             }
             default:
                 throw new NotImplementedException("Status '" + status + "' has not been implemented");

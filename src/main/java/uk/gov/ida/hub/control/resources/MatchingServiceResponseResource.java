@@ -1,6 +1,7 @@
 package uk.gov.ida.hub.control.resources;
 
 import com.codahale.metrics.annotation.Timed;
+import org.apache.commons.lang3.NotImplementedException;
 import uk.gov.ida.hub.control.clients.SessionClient;
 
 import javax.ws.rs.Consumes;
@@ -11,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
-import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
+import static uk.gov.ida.hub.control.handlers.AwaitCycle3DataHandler.handleAwaitCycle3Data;
 
 @Path("/policy/session/{sessionId}/attribute-query-response")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -25,13 +26,13 @@ public class MatchingServiceResponseResource {
     @POST
     @Timed
     public Response receiveAttributeQueryResponseFromMatchingService(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) {
-        var state = sessionClient.getState(sessionId);
-        // TODO ... if no match and cycle 3 is configured:
-        var newState = state.awaitCycle3Data();
-        sessionClient.setState(sessionId, newState);
-        return Response.ok(mapOf(
-            "responseProcessingStatus", "GET_C3_DATA",
-            "sessionId", sessionId
-        )).build();
+        switch ("TODO") {
+            // TODO ... if no match and cycle 3 is configured:
+            case "TODO":
+                return handleAwaitCycle3Data(sessionClient, sessionId);
+            // TODO: other cases
+            default:
+                throw new NotImplementedException("Don't know how to handle this matching result");
+        }
     }
 }
