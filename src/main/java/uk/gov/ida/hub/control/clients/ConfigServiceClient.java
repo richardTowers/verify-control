@@ -67,4 +67,14 @@ public class ConfigServiceClient {
             .get()
             .readEntity(boolean.class);
     }
+
+    public String getCycle3AttributeName(String serviceEntityId) {
+        return configServiceWebTarget
+            .path("/config/transactions/{entityId}/matching-process")
+            .resolveTemplate("entityId", serviceEntityId)
+            .request(APPLICATION_JSON_TYPE)
+            .get()
+            .readEntity(new GenericType<Map<String, String>>() { })
+            .get("attributeName");
+    }
 }

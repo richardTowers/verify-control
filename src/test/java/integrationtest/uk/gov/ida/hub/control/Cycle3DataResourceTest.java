@@ -1,12 +1,13 @@
 package integrationtest.uk.gov.ida.hub.control;
 
 import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrationTest;
-import org.apache.commons.lang3.NotImplementedException;
-import org.junit.Ignore;
 import org.junit.Test;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
+import java.util.AbstractMap;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -61,9 +62,35 @@ public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
         assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Cycle3Cancelled.NAME);
     }
 
-    @Ignore
     @Test
     public void shouldGetCycle3AttributeRequestDataFromConfiguration() {
-        throw new NotImplementedException("Test shouldGetCycle3AttributeRequestDataFromConfiguration has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.NAME);
+        redisClient.hset("session:some-session-id", "requestId", "some-request-id");
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+
+        configureFor(configPort());
+        stubFor(
+            get(urlPathEqualTo("/config/transactions/https:%2F%2Fsome-service-entity-id/matching-process"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"attributeName\":\"some-attribute-name\"}"))
+        );
+        configureFor(samlSoapProxyPort());
+        stubFor(
+            post(urlPathEqualTo("/matching-service-request-sender")).withQueryParam("sessionId", equalTo("some-session-id"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json"))
+        );
+
+        var response = httpClient
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/cycle-3-attribute", verifyControl.getLocalPort(), "some-session-id"))
+            .request(APPLICATION_JSON_TYPE)
+            .buildGet()
+            .invoke();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.NAME);
+        var responseBody = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(responseBody).contains(
+            new AbstractMap.SimpleEntry<>("attributeName", "some-attribute-name"),
+            new AbstractMap.SimpleEntry<>("requestIssuerId", "https://some-service-entity-id")
+        );
     }
 }

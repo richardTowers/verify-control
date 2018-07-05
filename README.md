@@ -1,7 +1,7 @@
 Verify Control
 ==============
 
-![63% Done](http://progressed.io/bar/63)
+![65% Done](http://progressed.io/bar/65)
 [![Build Status](https://travis-ci.org/richardTowers/verify-control.svg?branch=master)](https://travis-ci.org/richardTowers/verify-control)
 
 <a href=https://youtu.be/NmmWkJtuxz4>

@@ -62,6 +62,7 @@ public class ResourceFactory {
     public Cycle3DataResource createCycle3DataResource() {
         var client = new JerseyClientBuilder(environment).build(Cycle3DataResource.class.getSimpleName());
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
-        return new Cycle3DataResource(new SessionClient(redisClient), new SamlSoapProxyClient(samlSoapProxyWebTarget));
+        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
+        return new Cycle3DataResource(new SessionClient(redisClient), new SamlSoapProxyClient(samlSoapProxyWebTarget), new ConfigServiceClient(configServiceTarget));
     }
 }
