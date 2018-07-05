@@ -36,4 +36,12 @@ public class Cycle3DataResource {
         VerifySessionState state = sessionClient.getState(sessionId);
         sessionClient.setState(sessionId, state.submitCycle3Request());
     }
+
+    @POST
+    @Path("/cancel")
+    @Timed
+    public void cancelCycle3(@PathParam("sessionId") String sessionId, Map<String, String> cycle3UserInput) throws SessionNotFoundException {
+        VerifySessionState state = sessionClient.getState(sessionId);
+        sessionClient.setState(sessionId, state.cancelCycle3Request());
+    }
 }

@@ -25,6 +25,7 @@ public interface VerifySessionState {
     default Matching authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
     default AwaitingCycle3Data awaitCycle3Data() { throw new StateProcessingException("awaitCycle3Data", this); }
     default Cycle3MatchRequestSent submitCycle3Request() { throw new StateProcessingException("submitCycle3Request", this); }
+    default Cycle3Cancelled cancelCycle3Request() { throw new StateProcessingException("cancelCycle3Request", this); }
     default FraudResponse fraudResponse() { throw new StateProcessingException("fraudResponse", this); }
     default Match match() { throw new StateProcessingException("match", this); }
 
@@ -93,6 +94,7 @@ public interface VerifySessionState {
         public static final String NAME = "awaitingCycle3Data";
 
         @Transition @Override public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
+        @Transition @Override public Cycle3Cancelled cancelCycle3Request() { return new Cycle3Cancelled(); }
 
         @Override public String getName() { return NAME; }
     }
@@ -109,6 +111,13 @@ public interface VerifySessionState {
         public static final String NAME = "cycle3MatchRequestSent";
 
         @Transition @Override public Match match() { return new Match(); }
+
+        @Override public String getName() { return NAME; }
+    }
+
+    @State(name = Cycle3Cancelled.NAME)
+    final class Cycle3Cancelled extends Matching {
+        public static final String NAME = "cycle3Cancelled";
 
         @Override public String getName() { return NAME; }
     }

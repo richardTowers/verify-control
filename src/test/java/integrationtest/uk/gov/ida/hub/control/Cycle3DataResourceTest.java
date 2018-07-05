@@ -39,10 +39,26 @@ public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
         assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Cycle3MatchRequestSent.NAME);
     }
 
-    @Ignore
     @Test
     public void shouldUpdateSessionStateToCancelledCycle3InputStateWhenInputToCycle3IsCancelled() {
-        throw new NotImplementedException("Test shouldUpdateSessionStateToCancelledCycle3InputStateWhenInputToCycle3IsCancelled has not been implemented");
+        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.NAME);
+        redisClient.hset("session:some-session-id", "requestId", "some-request-id");
+        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+
+        configureFor(samlSoapProxyPort());
+        stubFor(
+            post(urlPathEqualTo("/matching-service-request-sender")).withQueryParam("sessionId", equalTo("some-session-id"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json"))
+        );
+
+        var response = httpClient
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/cycle-3-attribute/cancel", verifyControl.getLocalPort(), "some-session-id"))
+            .request(APPLICATION_JSON_TYPE)
+            .buildPost(null)
+            .invoke();
+
+        assertThat(response.getStatus()).isEqualTo(204);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Cycle3Cancelled.NAME);
     }
 
     @Ignore
