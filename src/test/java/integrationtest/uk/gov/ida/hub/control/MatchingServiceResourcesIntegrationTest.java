@@ -81,9 +81,9 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         anIdpIsSelectedForRegistration();
         anIdpAuthnRequestWasGenerated();
         anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent();
-        aNoMatchResponseWasReceivedFromTheMSAForCycle01_withCycle3Enabled();
+        aNoMatchResponseWasReceivedFromTheMSA();
         aCycle3AttributeHasBeenSentToPolicyFromTheUser();
-        aNoMatchResponseHasBeenReceivedAndUserAccountCreationIsEnabled();
+        aNoMatchResponseWasReceivedFromTheMSA();
         // aUserAccountCreationResponseIsReceived();
 
         throw new NotImplementedException("Test fullSuccessfulJourneyThroughAllStates has not been implemented");
@@ -100,7 +100,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.NAME);
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
-        var response = aNoMatchResponseWasReceivedFromTheMSAForCycle01_withCycle3Enabled();
+        var response = aNoMatchResponseWasReceivedFromTheMSA();
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.NAME);
@@ -237,7 +237,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
-    private Response aNoMatchResponseWasReceivedFromTheMSAForCycle01_withCycle3Enabled() {
+    private Response aNoMatchResponseWasReceivedFromTheMSA() {
         configureFor(samlEnginePort());
         stubFor(
             post(
@@ -272,10 +272,6 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
             ), APPLICATION_JSON_TYPE))
             .invoke();
         assertThat(response.getStatus()).isEqualTo(204);
-    }
-
-    private void aNoMatchResponseHasBeenReceivedAndUserAccountCreationIsEnabled() {
-        throw new NotImplementedException("TODO");
     }
 
     private void aUserAccountCreationResponseIsReceived() {
