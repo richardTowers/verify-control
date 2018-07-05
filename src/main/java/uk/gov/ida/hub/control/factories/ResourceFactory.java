@@ -12,6 +12,7 @@ import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.resources.AuthnRequestFromTransactionResource;
 import uk.gov.ida.hub.control.resources.Cycle3DataResource;
 import uk.gov.ida.hub.control.resources.MatchingServiceResponseResource;
+import uk.gov.ida.hub.control.resources.ResponseFromIdpResource;
 import uk.gov.ida.hub.control.resources.SessionResource;
 
 import java.net.URI;
@@ -53,9 +54,13 @@ public class ResourceFactory {
     public MatchingServiceResponseResource createMatchingServiceResponseResource() {
         var client = new JerseyClientBuilder(environment).build(MatchingServiceResponseResource.class.getSimpleName());
         var samlEngineTarget = client.target(URI.create(configuration.getSamlEngineUrl()));
+        var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
+        var samlSoapProxyTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
         return new MatchingServiceResponseResource(
             new SessionClient(redisClient),
-            new SamlEngineClient(samlEngineTarget)
+            new SamlEngineClient(samlEngineTarget),
+            new ConfigServiceClient(configServiceTarget),
+            new SamlSoapProxyClient(samlSoapProxyTarget)
         );
     }
 
@@ -64,5 +69,9 @@ public class ResourceFactory {
         var samlSoapProxyWebTarget = client.target(URI.create(configuration.getSamlSoapProxyUrl()));
         var configServiceTarget = client.target(URI.create(configuration.getConfigUrl()));
         return new Cycle3DataResource(new SessionClient(redisClient), new SamlSoapProxyClient(samlSoapProxyWebTarget), new ConfigServiceClient(configServiceTarget));
+    }
+
+    public ResponseFromIdpResource createResponseFromIdpResource() {
+        return new ResponseFromIdpResource(new SessionClient(redisClient));
     }
 }

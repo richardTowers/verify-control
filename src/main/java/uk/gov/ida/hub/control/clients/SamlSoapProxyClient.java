@@ -4,6 +4,8 @@ import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 
 import javax.ws.rs.client.WebTarget;
+import java.util.List;
+import java.util.Map;
 
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -26,7 +28,34 @@ public class SamlSoapProxyClient {
         String attributeQueryUri,
         String issuer,
         String onboarding) {
-        var samlSoapProxyRequest = ImmutableMap.builder()
+        makeMatchingServiceRequest(
+            sessionId,
+            requestId,
+            encryptedMatchingDatasetAssertion,
+            authnStatementAssertion,
+            matchingServiceEntityId,
+            levelOfAssurance,
+            persistentId,
+            attributeQueryUri,
+            issuer,
+            onboarding,
+            null
+        );
+    }
+
+    public void makeMatchingServiceRequest(
+        String sessionId,
+        String requestId,
+        String encryptedMatchingDatasetAssertion,
+        String authnStatementAssertion,
+        String matchingServiceEntityId,
+        String levelOfAssurance,
+        String persistentId,
+        String attributeQueryUri,
+        String issuer,
+        String onboarding,
+        List<Map<String, String>> userAccountCreationAttributes) {
+        var requestBuilder = ImmutableMap.<String, Object>builder()
             .put("requestId", requestId)
             .put("encryptedMatchingDatasetAssertion", encryptedMatchingDatasetAssertion)
             .put("authnStatementAssertion", authnStatementAssertion)
@@ -38,8 +67,12 @@ public class SamlSoapProxyClient {
             .put("persistentId", persistentId)
             .put("assertionExpiry", DateTime.now().plusMinutes(5)) // TODO don't hardcode this
             .put("attributeQueryUri", attributeQueryUri)
-            .put("onboarding", onboarding)
-            .build();
+            .put("onboarding", onboarding);
+
+        if (userAccountCreationAttributes != null) {
+            requestBuilder.put("userAccountCreationAttributes", userAccountCreationAttributes);
+        }
+        var samlSoapProxyRequest = requestBuilder.build();
 
         int samlSoapProxyResponseStatus = samlSoapProxyWebTarget
             .path("/matching-service-request-sender")

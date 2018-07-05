@@ -15,6 +15,10 @@ public interface VerifySessionState {
             case Match.NAME: return new Match();
             case Cycle0And1MatchRequestSent.NAME: return new Cycle0And1MatchRequestSent();
             case AwaitingCycle3Data.NAME: return new AwaitingCycle3Data();
+            case Cycle3MatchRequestSent.NAME: return new Cycle3MatchRequestSent();
+            case MatchingFailed.NAME: return new MatchingFailed();
+            case UserAccountCreationRequestSent.NAME: return new UserAccountCreationRequestSent();
+            case UserAccountCreated.NAME: return new UserAccountCreated();
             default: throw new NotImplementedException("No State for name '" + name + "'");
         }
     }
@@ -25,9 +29,13 @@ public interface VerifySessionState {
     default Matching authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
     default AwaitingCycle3Data awaitCycle3Data() { throw new StateProcessingException("awaitCycle3Data", this); }
     default Cycle3MatchRequestSent submitCycle3Request() { throw new StateProcessingException("submitCycle3Request", this); }
-    default Cycle3Cancelled cancelCycle3Request() { throw new StateProcessingException("cancelCycle3Request", this); }
+    default MatchingFailed cancelCycle3Request() { throw new StateProcessingException("cancelCycle3Request", this); }
     default FraudResponse fraudResponse() { throw new StateProcessingException("fraudResponse", this); }
     default Match match() { throw new StateProcessingException("match", this); }
+    default MatchingFailed noMatch() { throw new StateProcessingException("noMatch", this); }
+    default UserAccountCreationRequestSent sendUserAccountCreationRequest() { throw new StateProcessingException("sendUserAccountCreationRequest", this); }
+    default MatchingFailed userAccountCreationFailed() { throw new StateProcessingException("userAccountCreationFailed", this); }
+    default UserAccountCreated userAccountCreationSucceeded() { throw new StateProcessingException("userAccountCreationSucceeded", this); }
 
     // Methods
     String getName();
@@ -83,7 +91,9 @@ public interface VerifySessionState {
         public static final String NAME = "cycle0And1MatchRequestSent";
 
         @Transition @Override public Match match() { return new Match(); }
+        @Transition @Override public MatchingFailed noMatch() { return new MatchingFailed(); }
         @Transition @Override public AwaitingCycle3Data awaitCycle3Data() { return new AwaitingCycle3Data(); }
+        @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
         @Override
         public String getName() { return NAME; }
@@ -94,7 +104,7 @@ public interface VerifySessionState {
         public static final String NAME = "awaitingCycle3Data";
 
         @Transition @Override public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
-        @Transition @Override public Cycle3Cancelled cancelCycle3Request() { return new Cycle3Cancelled(); }
+        @Transition @Override public MatchingFailed cancelCycle3Request() { return new MatchingFailed(); }
 
         @Override public String getName() { return NAME; }
     }
@@ -111,13 +121,32 @@ public interface VerifySessionState {
         public static final String NAME = "cycle3MatchRequestSent";
 
         @Transition @Override public Match match() { return new Match(); }
+        @Transition @Override public MatchingFailed noMatch() { return new MatchingFailed(); }
+        @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
         @Override public String getName() { return NAME; }
     }
 
-    @State(name = Cycle3Cancelled.NAME)
-    final class Cycle3Cancelled extends Matching {
-        public static final String NAME = "cycle3Cancelled";
+    @State(name = UserAccountCreationRequestSent.NAME)
+    final class UserAccountCreationRequestSent extends Matching {
+        public static final String NAME = "userAccountCreationRequestSent";
+
+        @Transition @Override public MatchingFailed userAccountCreationFailed() { return new MatchingFailed(); }
+        @Transition @Override public UserAccountCreated userAccountCreationSucceeded() { return new UserAccountCreated(); }
+
+        @Override public String getName() { return NAME; }
+    }
+
+    @State(name = UserAccountCreated.NAME)
+    final class UserAccountCreated extends Matching {
+        public static final String NAME = "userAccountCreated";
+
+        @Override public String getName() { return NAME; }
+    }
+
+    @State(name = MatchingFailed.NAME)
+    final class MatchingFailed extends Matching {
+        public static final String NAME = "matchingFailed";
 
         @Override public String getName() { return NAME; }
     }

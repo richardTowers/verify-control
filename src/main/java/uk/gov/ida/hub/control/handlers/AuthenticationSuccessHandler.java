@@ -80,18 +80,28 @@ public class AuthenticationSuccessHandler {
 
 
         var matchingServiceConfig = configServiceClient.getMatchingServiceConfig(matchingServiceEntityId);
+
+        String encryptedMatchingDatasetAssertion = samlEngineResponse.get("encryptedMatchingDatasetAssertion");
+        String authnStatementAssertion = samlEngineResponse.get("authnStatementAssertion");
+        String persistentId = samlEngineResponse.get("persistentId");
+
         samlSoapProxyClient.makeMatchingServiceRequest(
             sessionId,
             session.get("requestId"),
-            samlEngineResponse.get("encryptedMatchingDatasetAssertion"),
-            samlEngineResponse.get("authnStatementAssertion"),
+            encryptedMatchingDatasetAssertion,
+            authnStatementAssertion,
             matchingServiceEntityId,
             loaAchieved,
-            samlEngineResponse.get("persistentId"),
+            persistentId,
             matchingServiceConfig.get("uri"),
             sessionClient.get(sessionId, "issuer"),
             matchingServiceConfig.get("onboarding")
         );
+
+        sessionClient.set(sessionId, "encryptedMatchingDatasetAssertion", encryptedMatchingDatasetAssertion);
+        sessionClient.set(sessionId, "authnStatementAssertion", authnStatementAssertion);
+        sessionClient.set(sessionId, "persistentId", persistentId);
+        sessionClient.set(sessionId, "loaAchieved", loaAchieved);
 
         sessionClient.setState(sessionId, stateToTransitionTo);
         return Response.ok(mapOf(

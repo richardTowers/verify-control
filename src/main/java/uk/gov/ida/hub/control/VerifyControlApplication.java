@@ -10,6 +10,7 @@ import uk.gov.ida.hub.control.errors.IdpDisabledException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.errors.StateProcessingException;
 import uk.gov.ida.hub.control.factories.ResourceFactory;
+import uk.gov.ida.hub.control.resources.ResponseFromIdpResource;
 
 public class VerifyControlApplication extends Application<VerifyControlConfiguration> {
 
@@ -38,6 +39,7 @@ public class VerifyControlApplication extends Application<VerifyControlConfigura
         jersey.register(resourceFactory.createAuthnRequestFromTransactionResource());
         jersey.register(resourceFactory.createMatchingServiceResponseResource());
         jersey.register(resourceFactory.createCycle3DataResource());
+        jersey.register(resourceFactory.createResponseFromIdpResource());
 
         // Exception Mappers
         jersey.register(new SessionNotFoundException.Mapper());

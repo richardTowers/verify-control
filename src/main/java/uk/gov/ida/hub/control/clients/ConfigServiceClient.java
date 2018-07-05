@@ -59,6 +59,15 @@ public class ConfigServiceClient {
             .readEntity(new GenericType<Map<String, String>>() {});
     }
 
+    public List<Map<String, String>> getUserAccountCreationAttributes(String matchingServiceEntityId) {
+        return configServiceWebTarget
+            .path("/config/matching-services/{entityId}/user-account-creation-attributes")
+            .resolveTemplate("entityId", matchingServiceEntityId)
+            .request(APPLICATION_JSON_TYPE)
+            .get()
+            .readEntity(new GenericType<List<Map<String, String>>>() {});
+    }
+
     public boolean isEidasEnabled(String issuer) {
         return configServiceWebTarget
             .path("/config/transactions/{entityId}/eidas-enabled")

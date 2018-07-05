@@ -59,7 +59,7 @@ public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
             .invoke();
 
         assertThat(response.getStatus()).isEqualTo(204);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Cycle3Cancelled.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.MatchingFailed.NAME);
     }
 
     @Test
