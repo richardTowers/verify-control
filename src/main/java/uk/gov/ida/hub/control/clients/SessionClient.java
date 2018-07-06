@@ -18,6 +18,7 @@ public class SessionClient {
     public String initialise(Map<String, String> session) {
         var sessionId = UUID.randomUUID().toString();
         redisClient.hmset(sessionKey(sessionId), session);
+        redisClient.set(stateKey(sessionId), VerifySessionState.Started.class.getSimpleName());
         return sessionId;
     }
 

@@ -4,9 +4,12 @@ import integrationtest.uk.gov.ida.hub.control.helpers.BaseVerifyControlIntegrati
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Ignore;
 import org.junit.Test;
+import uk.gov.ida.hub.control.api.AuthnRequest;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -22,8 +25,9 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
 
     @Test
     public void shouldReturnOkWhenASuccessMatchingServiceResponseIsReceived() {
-        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName());
-        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
+        var sessionId = "some-session-id";
+        redisClient.set("state:" + sessionId, VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName());
+        redisClient.hset("session:" + sessionId, "issuer", "https://some-service-entity-id");
 
         configureFor(samlEnginePort());
         stubFor(
@@ -34,13 +38,13 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         );
 
         Response response = httpClient
-            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), "some-session-id"))
+            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), sessionId))
             .request(APPLICATION_JSON_TYPE)
             .buildPost(entity(mapOf("samlResponse", "some-saml-response"), APPLICATION_JSON_TYPE))
             .invoke();
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Match.class.getSimpleName());
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.Match.class.getSimpleName());
     }
 
     @Ignore
@@ -71,28 +75,22 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
 
     @Test
     public void fullSuccessfulJourneyThroughAllStates() {
-        // TODO: get rid of these and initialise the session by calling the API
-        redisClient.set("state:some-session-id", VerifySessionState.Started.class.getSimpleName());
-        redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
-        redisClient.hset("session:some-session-id", "isRegistration", "true");
-        redisClient.hset("session:some-session-id", "requestId", "some-request-id");
-
-
-        anIdpIsSelectedForRegistration();
-        anIdpAuthnRequestWasGenerated();
-        anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent();
-        aNoMatchResponseWasReceivedFromTheMSA();
-        aCycle3AttributeHasBeenSentToPolicyFromTheUser();
-        aNoMatchResponseWasReceivedFromTheMSA();
-        aUserAccountCreationResponseIsReceived();
+        var sessionId = aSessionIsCreated();
+        anIdpIsSelectedForRegistration(sessionId);
+        anIdpAuthnRequestWasGenerated(sessionId);
+        anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aCycle3AttributeHasBeenSentToPolicyFromTheUser(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aUserAccountCreationResponseIsReceived(sessionId);
 
         Response response = httpClient
-            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), "some-session-id"))
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), sessionId))
             .request(APPLICATION_JSON_TYPE)
             .get();
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.UserAccountCreated.class.getSimpleName());
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.UserAccountCreated.class.getSimpleName());
     }
 
     @Ignore
@@ -106,7 +104,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
-        var response = aNoMatchResponseWasReceivedFromTheMSA();
+        var response = aNoMatchResponseWasReceivedFromTheMSA("some-session-id");
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
@@ -148,13 +146,29 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         throw new NotImplementedException("Test isResponseFromHubReadyShouldTellFrontendToShowErrorPageWhenMSRespondsButSamlEngineThrowsInvalidSamlError has not been implemented");
     }
 
-    private void anIdpIsSelectedForRegistration() {
+    private String aSessionIsCreated() {
+        configureFor(samlEnginePort());
+        stubFor(
+            post(urlEqualTo("/saml-engine/translate-rp-authn-request")).willReturn(
+                aResponse()
+                    .withHeader("Content-Type", MediaType.APPLICATION_JSON)
+                    .withBody("{\"issuer\":\"https://some-service-entity-id\",\"requestId\":\"some-request-id\"}")
+            )
+        );
+        return httpClient
+            .target(String.format("http://localhost:%s/policy/session", verifyControl.getLocalPort()))
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new AuthnRequest("some-saml-request", "some-relay-state", "some-principal-ip-address"), MediaType.APPLICATION_JSON_TYPE))
+            .readEntity(String.class);
+    }
+
+    private void anIdpIsSelectedForRegistration(String sessionId) {
         configureFor(configPort());
         stubFor(
             get(urlEqualTo("/config/idps/https:%2F%2Fsome-service-entity-id/LEVEL_1/enabled"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("[\"https://some-idp-entity-id\"]"))
         );
-        var url = String.format("http://localhost:%d/policy/received-authn-request/%s/select-identity-provider", verifyControl.getLocalPort(), "some-session-id");
+        var url = String.format("http://localhost:%d/policy/received-authn-request/%s/select-identity-provider", verifyControl.getLocalPort(), sessionId);
         var response = httpClient
             .target(url)
             .request(APPLICATION_JSON_TYPE)
@@ -170,7 +184,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(response.getStatus()).isEqualTo(201);
     }
 
-    private void anIdpAuthnRequestWasGenerated() {
+    private void anIdpAuthnRequestWasGenerated(String sessionId) {
         configureFor(samlEnginePort());
         stubFor(
             post(urlEqualTo("/saml-engine/generate-idp-authn-request"))
@@ -182,7 +196,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
                         .withBody("{\"samlRequest\":\"some-saml-request\",\"ssoUri\":\"https://some-sso-uri\"}")
                 )
         );
-        var url = String.format("http://localhost:%d/policy/session/%s/idp-authn-request-from-hub", verifyControl.getLocalPort(), "some-session-id");
+        var url = String.format("http://localhost:%d/policy/session/%s/idp-authn-request-from-hub", verifyControl.getLocalPort(), sessionId);
         var response = httpClient
             .target(url)
             .request(APPLICATION_JSON_TYPE)
@@ -190,7 +204,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
-    private void anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent() {
+    private void anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(String sessionId) {
         configureFor(configPort());
         stubFor(
             get(urlEqualTo("/config/transactions/https:%2F%2Fsome-service-entity-id/matching-service-entity-id"))
@@ -226,24 +240,24 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         );
         configureFor(samlSoapProxyPort());
         stubFor(
-            post(urlPathEqualTo("/matching-service-request-sender")).withQueryParam("sessionId", equalTo("some-session-id"))
+            post(urlPathEqualTo("/matching-service-request-sender")).withQueryParam("sessionId", equalTo(sessionId))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json"))
         );
 
         Map<String, String> request = mapOf(
             "samlResponse", "some-saml-response",
-            "sessionId", "some-session-id",
+            "sessionId", sessionId,
             "principalIPAddressAsSeenByHub", "some-ip-address"
         );
         Response response = httpClient
-            .target(String.format("http://localhost:%d/policy/session/%s/idp-authn-response", verifyControl.getLocalPort(), "some-session-id"))
+            .target(String.format("http://localhost:%d/policy/session/%s/idp-authn-response", verifyControl.getLocalPort(), sessionId))
             .request(APPLICATION_JSON_TYPE)
             .post(entity(request, APPLICATION_JSON_TYPE));
 
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
-    private Response aNoMatchResponseWasReceivedFromTheMSA() {
+    private Response aNoMatchResponseWasReceivedFromTheMSA(String sessionId) {
         configureFor(samlEnginePort());
         stubFor(
             post(
@@ -258,7 +272,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         );
 
         Response response = httpClient
-            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), "some-session-id"))
+            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), sessionId))
             .request(APPLICATION_JSON_TYPE)
             .buildPost(entity(mapOf("samlResponse", "some-saml-response"), APPLICATION_JSON_TYPE))
             .invoke();
@@ -267,15 +281,15 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         return response;
     }
 
-    private void aCycle3AttributeHasBeenSentToPolicyFromTheUser() {
+    private void aCycle3AttributeHasBeenSentToPolicyFromTheUser(String sessionId) {
         configureFor(samlSoapProxyPort());
         stubFor(
-            post(urlPathEqualTo("/matching-service-request-sender")).withQueryParam("sessionId", equalTo("some-session-id"))
+            post(urlPathEqualTo("/matching-service-request-sender")).withQueryParam("sessionId", equalTo(sessionId))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json"))
         );
 
         var response = httpClient
-            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/cycle-3-attribute/submit", verifyControl.getLocalPort(), "some-session-id"))
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/cycle-3-attribute/submit", verifyControl.getLocalPort(), sessionId))
             .request(APPLICATION_JSON_TYPE)
             .buildPost(entity(mapOf(
                 "cycle3Input", "some-cycle-3-input-value",
@@ -285,7 +299,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
-    private void aUserAccountCreationResponseIsReceived() {
+    private void aUserAccountCreationResponseIsReceived(String sessionId) {
         configureFor(samlEnginePort());
         stubFor(
             post(
@@ -294,7 +308,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
             )
         );
         httpClient
-            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), "some-session-id"))
+            .target(String.format("http://localhost:%d/policy/session/%s/attribute-query-response", verifyControl.getLocalPort(), sessionId))
             .request(APPLICATION_JSON_TYPE)
             .buildPost(entity(mapOf("samlResponse", "some-saml-response"), APPLICATION_JSON_TYPE))
             .invoke();
