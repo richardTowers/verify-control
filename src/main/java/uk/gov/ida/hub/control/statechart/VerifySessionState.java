@@ -36,9 +36,9 @@ public interface VerifySessionState {
     final class IdpSelected implements VerifySessionState {
         public static final String NAME = "idpSelected";
 
-        @Transition @Override public AuthnFailed authenticationFailed() { return new AuthnFailed(); }
-        @Transition @Override public FraudResponse fraudResponse() { return new FraudResponse(); }
-        @Transition @Override public Matching authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
+        @Transition @Override public AuthnFailed   authenticationFailed()    { return new AuthnFailed();                }
+        @Transition @Override public FraudResponse fraudResponse()           { return new FraudResponse();              }
+        @Transition @Override public Matching      authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
 
         @Override public String getName() { return NAME; }
     }
@@ -72,9 +72,9 @@ public interface VerifySessionState {
     final class Cycle0And1MatchRequestSent extends Matching {
         public static final String NAME = "cycle0And1MatchRequestSent";
 
-        @Transition @Override public Match match() { return new Match(); }
-        @Transition @Override public MatchingFailed noMatch() { return new MatchingFailed(); }
-        @Transition @Override public AwaitingCycle3Data awaitCycle3Data() { return new AwaitingCycle3Data(); }
+        @Transition @Override public Match                          match()                          { return new Match();                          }
+        @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
+        @Transition @Override public AwaitingCycle3Data             awaitCycle3Data()                { return new AwaitingCycle3Data();             }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
         @Override
@@ -86,7 +86,7 @@ public interface VerifySessionState {
         public static final String NAME = "awaitingCycle3Data";
 
         @Transition @Override public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
-        @Transition @Override public MatchingFailed cancelCycle3Request() { return new MatchingFailed(); }
+        @Transition @Override public MatchingFailed         cancelCycle3Request() { return new MatchingFailed();         }
 
         @Override public String getName() { return NAME; }
     }
@@ -102,8 +102,8 @@ public interface VerifySessionState {
     final class Cycle3MatchRequestSent extends Matching {
         public static final String NAME = "cycle3MatchRequestSent";
 
-        @Transition @Override public Match match() { return new Match(); }
-        @Transition @Override public MatchingFailed noMatch() { return new MatchingFailed(); }
+        @Transition @Override public Match                          match()                          { return new Match();                          }
+        @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
         @Override public String getName() { return NAME; }
@@ -113,7 +113,7 @@ public interface VerifySessionState {
     final class UserAccountCreationRequestSent extends Matching {
         public static final String NAME = "userAccountCreationRequestSent";
 
-        @Transition @Override public MatchingFailed userAccountCreationFailed() { return new MatchingFailed(); }
+        @Transition @Override public MatchingFailed     userAccountCreationFailed()    { return new MatchingFailed();     }
         @Transition @Override public UserAccountCreated userAccountCreationSucceeded() { return new UserAccountCreated(); }
 
         @Override public String getName() { return NAME; }
