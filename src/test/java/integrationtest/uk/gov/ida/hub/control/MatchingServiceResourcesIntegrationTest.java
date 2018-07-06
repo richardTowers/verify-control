@@ -69,9 +69,9 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         anIdpIsSelectedForRegistration(sessionId);
         anIdpAuthnRequestWasGenerated(sessionId);
         anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(sessionId);
-        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-cycle-3-attribute");
         aCycle3AttributeHasBeenSentToPolicyFromTheUser(sessionId);
-        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-cycle-3-attribute");
 
         Response response = httpClient
             .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), sessionId))
@@ -84,10 +84,25 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(responseBody.get("responseProcessingStatus")).isEqualTo("WAIT");
         assertThat(responseBody.get("sessionId")).isEqualTo(sessionId);
     }
-    @Ignore
+
     @Test
     public void responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3DisabledUserAccountCreationAttributesAreFetched() {
-        throw new NotImplementedException("Test responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3DisabledUserAccountCreationAttributesAreFetched has not been implemented");
+        var sessionId = aSessionIsCreated();
+        anIdpIsSelectedForRegistration(sessionId);
+        anIdpAuthnRequestWasGenerated(sessionId);
+        anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, null);
+
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), sessionId))
+            .request(APPLICATION_JSON_TYPE)
+            .get();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.UserAccountCreationRequestSent.class.getSimpleName());
+        var responseBody = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(responseBody.get("responseProcessingStatus")).isEqualTo("WAIT");
+        assertThat(responseBody.get("sessionId")).isEqualTo(sessionId);
     }
 
     @Test
@@ -96,9 +111,9 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         anIdpIsSelectedForRegistration(sessionId);
         anIdpAuthnRequestWasGenerated(sessionId);
         anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(sessionId);
-        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-cycle-3-attribute");
         aCycle3AttributeHasBeenSentToPolicyFromTheUser(sessionId);
-        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-cycle-3-attribute");
         aUserAccountCreationResponseIsReceived(sessionId);
 
         Response response = httpClient
@@ -121,7 +136,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
-        var response = aNoMatchResponseWasReceivedFromTheMSA("some-session-id");
+        var response = aNoMatchResponseWasReceivedFromTheMSA("some-session-id", "some-cycle-3-attribute");
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
@@ -274,7 +289,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
-    private Response aNoMatchResponseWasReceivedFromTheMSA(String sessionId) {
+    private Response aNoMatchResponseWasReceivedFromTheMSA(String sessionId, String cycle3AttributeName) {
         configureFor(samlEnginePort());
         stubFor(
             post(
@@ -286,6 +301,12 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         stubFor(
             get(urlEqualTo("/config/matching-services/https:%2F%2Fsome-matching-service-entity-id/user-account-creation-attributes"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("[{}]"))
+        );
+        stubFor(
+            get(urlPathEqualTo("/config/transactions/https:%2F%2Fsome-service-entity-id/matching-process"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{" +
+                    "\"attributeName\":" + (cycle3AttributeName == null ? "null" : "\"" + cycle3AttributeName + "\"") +
+                    "}"))
         );
 
         Response response = httpClient

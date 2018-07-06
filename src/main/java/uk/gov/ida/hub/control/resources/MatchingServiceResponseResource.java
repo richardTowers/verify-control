@@ -45,6 +45,7 @@ public class MatchingServiceResponseResource {
     @Timed
     public Response receiveAttributeQueryResponseFromMatchingService(@PathParam("sessionId") String sessionId, Map<String, String> samlResponse) throws SessionNotFoundException, ApiBadRequestException {
         var state = sessionClient.getState(sessionId);
+        var issuer = sessionClient.get(sessionId, "issuer");
         var translatedResponse = samlEngineClient.translateMatchingServiceResponse(samlResponse.get("samlResponse"));
         var status = translatedResponse.get("status");
         switch (status) {
@@ -54,11 +55,16 @@ public class MatchingServiceResponseResource {
                 var matchingStage = state.getMatchingStage();
                 switch (matchingStage) {
                     case CYCLE_0_AND_1:
-                        if (true) { // TODO if cycle 3 is configured too
+                        if (configServiceClient.getCycle3AttributeName(issuer) != null) {
                             return handleAwaitCycle3Data(sessionClient, sessionId);
                         }
                         else {
-                            throw new NotImplementedException("No match for cycle 0 and 1"); // TODO
+                            if (true) { // TODO if user account creation is enabled
+                                return handleUserAccountCreationRequest(sessionClient, configServiceClient, samlSoapProxyClient, sessionId);
+                            }
+                            else {
+                                throw new NotImplementedException("No match for cycle 0 and 1 - user account creation disabled"); // TODO
+                            }
                         }
                     case CYCLE_3:
                         if (true) { // TODO if user account creation is enabled
