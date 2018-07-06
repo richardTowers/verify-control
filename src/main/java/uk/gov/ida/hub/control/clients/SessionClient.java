@@ -3,6 +3,7 @@ package uk.gov.ida.hub.control.clients;
 import io.lettuce.core.api.sync.RedisCommands;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
+import uk.gov.ida.hub.control.statechart.VerifySessionStateFactory;
 
 import java.util.Map;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class SessionClient {
 
     public VerifySessionState getState(String sessionId) throws SessionNotFoundException {
         checkSessionExists(sessionId);
-        return VerifySessionState.forName(redisClient.get(stateKey(sessionId)));
+        return VerifySessionStateFactory.forName(redisClient.get(stateKey(sessionId)));
     }
 
     public void setState(String sessionId, VerifySessionState state) throws SessionNotFoundException {

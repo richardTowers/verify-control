@@ -1,41 +1,23 @@
 package uk.gov.ida.hub.control.statechart;
 
-import org.apache.commons.lang3.NotImplementedException;
 import uk.gov.ida.hub.control.errors.StateProcessingException;
 import uk.gov.ida.hub.control.statechart.annotations.State;
 import uk.gov.ida.hub.control.statechart.annotations.Transition;
 
 public interface VerifySessionState {
-    static VerifySessionState forName(String name) {
-        if (name == null) { throw new NullPointerException("Parameter 'name' cannot be null"); }
-        switch (name) {
-            case Started.NAME: return new Started();
-            case IdpSelected.NAME: return new IdpSelected();
-            case AuthnFailed.NAME: return new AuthnFailed();
-            case Match.NAME: return new Match();
-            case Cycle0And1MatchRequestSent.NAME: return new Cycle0And1MatchRequestSent();
-            case AwaitingCycle3Data.NAME: return new AwaitingCycle3Data();
-            case Cycle3MatchRequestSent.NAME: return new Cycle3MatchRequestSent();
-            case MatchingFailed.NAME: return new MatchingFailed();
-            case UserAccountCreationRequestSent.NAME: return new UserAccountCreationRequestSent();
-            case UserAccountCreated.NAME: return new UserAccountCreated();
-            default: throw new NotImplementedException("No State for name '" + name + "'");
-        }
-    }
-
     // Transitions
-    default IdpSelected selectIdp() { throw new StateProcessingException("selectIdp", this); }
-    default AuthnFailed authenticationFailed() { throw new StateProcessingException("authenticationFailed", this); }
-    default Matching authenticationSucceeded() { throw new StateProcessingException("authenticationSucceeded", this); }
-    default AwaitingCycle3Data awaitCycle3Data() { throw new StateProcessingException("awaitCycle3Data", this); }
-    default Cycle3MatchRequestSent submitCycle3Request() { throw new StateProcessingException("submitCycle3Request", this); }
-    default MatchingFailed cancelCycle3Request() { throw new StateProcessingException("cancelCycle3Request", this); }
-    default FraudResponse fraudResponse() { throw new StateProcessingException("fraudResponse", this); }
-    default Match match() { throw new StateProcessingException("match", this); }
-    default MatchingFailed noMatch() { throw new StateProcessingException("noMatch", this); }
+    default IdpSelected                    selectIdp()                      { throw new StateProcessingException("selectIdp"                     , this); }
+    default AuthnFailed                    authenticationFailed()           { throw new StateProcessingException("authenticationFailed"          , this); }
+    default FraudResponse                  fraudResponse()                  { throw new StateProcessingException("fraudResponse"                 , this); }
+    default Matching                       authenticationSucceeded()        { throw new StateProcessingException("authenticationSucceeded"       , this); }
+    default AwaitingCycle3Data             awaitCycle3Data()                { throw new StateProcessingException("awaitCycle3Data"               , this); }
+    default Cycle3MatchRequestSent         submitCycle3Request()            { throw new StateProcessingException("submitCycle3Request"           , this); }
+    default MatchingFailed                 cancelCycle3Request()            { throw new StateProcessingException("cancelCycle3Request"           , this); }
+    default Match                          match()                          { throw new StateProcessingException("match"                         , this); }
+    default MatchingFailed                 noMatch()                        { throw new StateProcessingException("noMatch"                       , this); }
     default UserAccountCreationRequestSent sendUserAccountCreationRequest() { throw new StateProcessingException("sendUserAccountCreationRequest", this); }
-    default MatchingFailed userAccountCreationFailed() { throw new StateProcessingException("userAccountCreationFailed", this); }
-    default UserAccountCreated userAccountCreationSucceeded() { throw new StateProcessingException("userAccountCreationSucceeded", this); }
+    default MatchingFailed                 userAccountCreationFailed()      { throw new StateProcessingException("userAccountCreationFailed"     , this); }
+    default UserAccountCreated             userAccountCreationSucceeded()   { throw new StateProcessingException("userAccountCreationSucceeded"  , this); }
 
     // Methods
     String getName();
