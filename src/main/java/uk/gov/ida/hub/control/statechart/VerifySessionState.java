@@ -90,5 +90,7 @@ public interface VerifySessionState {
     }
 
     @State(name = "matchingFailed")
-    final class MatchingFailed extends Matching { }
+    final class MatchingFailed extends Matching {
+        @Override public ResponseProcessingStage getResponseProcessingStage() { return ResponseProcessingStage.MATCHING_FAILED; }
+    }
 }

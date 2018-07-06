@@ -20,6 +20,7 @@ import java.util.Map;
 import static uk.gov.ida.hub.control.handlers.AwaitCycle3DataHandler.handleAwaitCycle3Data;
 import static uk.gov.ida.hub.control.handlers.MatchResponseHandler.handleMatchResponse;
 import static uk.gov.ida.hub.control.handlers.UserAccountCreationHandler.handleUserAccountCreated;
+import static uk.gov.ida.hub.control.handlers.UserAccountCreationHandler.handleUserAccountCreationFailed;
 import static uk.gov.ida.hub.control.handlers.UserAccountCreationHandler.handleUserAccountCreationRequest;
 
 @Path("/policy/session/{sessionId}/attribute-query-response")
@@ -78,6 +79,8 @@ public class MatchingServiceResponseResource {
                 }
             case "UserAccountCreated":
                 return handleUserAccountCreated(sessionClient, sessionId);
+            case "UserAccountCreationFailed":
+                return handleUserAccountCreationFailed(sessionClient, sessionId);
             default:
                 throw new NotImplementedException("Unknown matching status: " + status);
         }

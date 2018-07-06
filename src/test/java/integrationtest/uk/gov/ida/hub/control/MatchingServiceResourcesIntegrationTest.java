@@ -114,7 +114,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-cycle-3-attribute");
         aCycle3AttributeHasBeenSentToPolicyFromTheUser(sessionId);
         aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-cycle-3-attribute");
-        aUserAccountCreationResponseIsReceived(sessionId);
+        aUserAccountCreationResponseIsReceived(sessionId, null);
 
         Response response = httpClient
             .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), sessionId))
@@ -125,10 +125,27 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.UserAccountCreated.class.getSimpleName());
     }
 
-    @Ignore
     @Test
     public void journeyWithFailedAccountCreation() {
-        throw new NotImplementedException("Test journeyWithFailedAccountCreation has not been implemented");
+        var sessionId = aSessionIsCreated();
+        anIdpIsSelectedForRegistration(sessionId);
+        anIdpAuthnRequestWasGenerated(sessionId);
+        anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-session-id");
+        aCycle3AttributeHasBeenSentToPolicyFromTheUser(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId, "some-session-id");
+        aUserAccountCreationResponseIsReceived(sessionId, "UserAccountCreationFailed");
+
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), sessionId))
+            .request(APPLICATION_JSON_TYPE)
+            .get();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        var responseProcessingDetails = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(responseProcessingDetails.get("responseProcessingStatus")).isEqualTo("USER_ACCOUNT_CREATION_FAILED");
+        assertThat(responseProcessingDetails.get("sessionId")).isEqualTo(sessionId);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.MatchingFailed.class.getSimpleName());
     }
 
     @Test
@@ -337,12 +354,14 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
-    private void aUserAccountCreationResponseIsReceived(String sessionId) {
+    private void aUserAccountCreationResponseIsReceived(String sessionId, String status) {
         configureFor(samlEnginePort());
         stubFor(
             post(
                 urlPathEqualTo("/saml-engine/translate-attribute-query")).willReturn(
-                aResponse().withHeader("Content-Type", "application/json").withBody("{\"status\":\"UserAccountCreated\"}")
+                aResponse().withHeader("Content-Type", "application/json").withBody("{" +
+                    "\"status\":\"" + (status == null ? "UserAccountCreated" : status) + "\"" +
+                    "}")
             )
         );
         httpClient

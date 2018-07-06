@@ -43,6 +43,12 @@ public class ResponseFromIdpResource {
                     "responseProcessingStatus", "WAIT",
                     "transactionEntityId", issuer
                 )).build();
+            case MATCHING_FAILED:
+                return Response.ok(mapOf(
+                    "sessionId", sessionId,
+                    "responseProcessingStatus", "USER_ACCOUNT_CREATION_FAILED", // TODO this shouldn't be hardcoded
+                    "transactionEntityId", issuer
+                )).build();
             default:
                 throw new NotImplementedException("Response processing stage " + responseProcessingStage + " has not been implemented.");
         }
