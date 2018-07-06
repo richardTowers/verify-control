@@ -7,19 +7,19 @@ public final class VerifySessionStateFactory {
 
     public static VerifySessionState forName(String name) {
         if (name == null) { throw new NullPointerException("Parameter 'name' cannot be null"); }
-        switch (name) {
-            case VerifySessionState.Started.NAME                        : return new VerifySessionState.Started();
-            case VerifySessionState.IdpSelected.NAME                    : return new VerifySessionState.IdpSelected();
-            case VerifySessionState.AuthnFailed.NAME                    : return new VerifySessionState.AuthnFailed();
-            case VerifySessionState.Match.NAME                          : return new VerifySessionState.Match();
-            case VerifySessionState.Cycle0And1MatchRequestSent.NAME     : return new VerifySessionState.Cycle0And1MatchRequestSent();
-            case VerifySessionState.AwaitingCycle3Data.NAME             : return new VerifySessionState.AwaitingCycle3Data();
-            case VerifySessionState.Cycle3MatchRequestSent.NAME         : return new VerifySessionState.Cycle3MatchRequestSent();
-            case VerifySessionState.MatchingFailed.NAME                 : return new VerifySessionState.MatchingFailed();
-            case VerifySessionState.UserAccountCreationRequestSent.NAME : return new VerifySessionState.UserAccountCreationRequestSent();
-            case VerifySessionState.UserAccountCreated.NAME             : return new VerifySessionState.UserAccountCreated();
-            case VerifySessionState.FraudResponse.NAME                  : return new VerifySessionState.FraudResponse();
-            default: throw new NotImplementedException("No State for name '" + name + "'");
+        else if (name.equals(VerifySessionState.Started.class.getSimpleName()))                        { return new VerifySessionState.Started();                        }
+        else if (name.equals(VerifySessionState.IdpSelected.class.getSimpleName()))                    { return new VerifySessionState.IdpSelected();                    }
+        else if (name.equals(VerifySessionState.AuthnFailed.class.getSimpleName()))                    { return new VerifySessionState.AuthnFailed();                    }
+        else if (name.equals(VerifySessionState.Match.class.getSimpleName()))                          { return new VerifySessionState.Match();                          }
+        else if (name.equals(VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName()))     { return new VerifySessionState.Cycle0And1MatchRequestSent();     }
+        else if (name.equals(VerifySessionState.AwaitingCycle3Data.class.getSimpleName()))             { return new VerifySessionState.AwaitingCycle3Data();             }
+        else if (name.equals(VerifySessionState.Cycle3MatchRequestSent.class.getSimpleName()))         { return new VerifySessionState.Cycle3MatchRequestSent();         }
+        else if (name.equals(VerifySessionState.MatchingFailed.class.getSimpleName()))                 { return new VerifySessionState.MatchingFailed();                 }
+        else if (name.equals(VerifySessionState.UserAccountCreationRequestSent.class.getSimpleName())) { return new VerifySessionState.UserAccountCreationRequestSent(); }
+        else if (name.equals(VerifySessionState.UserAccountCreated.class.getSimpleName()))             { return new VerifySessionState.UserAccountCreated();             }
+        else if (name.equals(VerifySessionState.FraudResponse.class.getSimpleName()))                  { return new VerifySessionState.FraudResponse();                  }
+        else {
+            throw new NotImplementedException("No State for name '" + name + "'");
         }
     }
 }

@@ -17,7 +17,7 @@ import static uk.gov.ida.hub.control.helpers.Aliases.mapOf;
 public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
     @Test
     public void should_ReturnSuccessWhenDataSubmitted() {
-        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
         redisClient.hset("session:some-session-id", "requestId", "some-request-id");
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
@@ -37,12 +37,12 @@ public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
             .invoke();
 
         assertThat(response.getStatus()).isEqualTo(204);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Cycle3MatchRequestSent.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Cycle3MatchRequestSent.class.getSimpleName());
     }
 
     @Test
     public void shouldUpdateSessionStateToCancelledCycle3InputStateWhenInputToCycle3IsCancelled() {
-        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
         redisClient.hset("session:some-session-id", "requestId", "some-request-id");
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
@@ -59,12 +59,12 @@ public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
             .invoke();
 
         assertThat(response.getStatus()).isEqualTo(204);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.MatchingFailed.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.MatchingFailed.class.getSimpleName());
     }
 
     @Test
     public void shouldGetCycle3AttributeRequestDataFromConfiguration() {
-        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
         redisClient.hset("session:some-session-id", "requestId", "some-request-id");
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
@@ -86,7 +86,7 @@ public class Cycle3DataResourceTest extends BaseVerifyControlIntegrationTest {
             .invoke();
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
         var responseBody = response.readEntity(new GenericType<Map<String, String>>() { });
         assertThat(responseBody).contains(
             new AbstractMap.SimpleEntry<>("attributeName", "some-attribute-name"),

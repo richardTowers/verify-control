@@ -55,7 +55,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
         assertThat(responseBody).contains(
             new AbstractMap.SimpleEntry<>("exceptionType", "INVALID_SAML")
         );
-        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.IdpSelected.NAME);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.IdpSelected.class.getSimpleName());
     }
 
     @Test
@@ -82,7 +82,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
             new AbstractMap.SimpleEntry<>("result", "OTHER"),
             new AbstractMap.SimpleEntry<>("isRegistration", true)
         );
-        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.AuthnFailed.NAME);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.AuthnFailed.class.getSimpleName());
     }
 
     @Test
@@ -109,7 +109,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
             new AbstractMap.SimpleEntry<>("result", "OTHER"),
             new AbstractMap.SimpleEntry<>("isRegistration", true)
         );
-        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.FraudResponse.NAME);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.FraudResponse.class.getSimpleName());
     }
 
     @Test
@@ -136,7 +136,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
             new AbstractMap.SimpleEntry<>("result", "OTHER"),
             new AbstractMap.SimpleEntry<>("isRegistration", true)
         );
-        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.AuthnFailed.NAME);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.AuthnFailed.class.getSimpleName());
     }
 
     @Test
@@ -163,7 +163,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
             new AbstractMap.SimpleEntry<>("result", "OTHER"),
             new AbstractMap.SimpleEntry<>("isRegistration", true)
         );
-        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.AuthnFailed.NAME);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.AuthnFailed.class.getSimpleName());
     }
 
     @Test
@@ -296,7 +296,7 @@ public class SessionResourceAuthnResponseFromIdpIntegrationTest extends BaseVeri
     }
 
     private void createSession() {
-        redisClient.set("state:" + sessionId, VerifySessionState.IdpSelected.NAME);
+        redisClient.set("state:" + sessionId, VerifySessionState.IdpSelected.class.getSimpleName());
         redisClient.hset("session:" + sessionId, "issuer", "https://some-service-entity-id");
         redisClient.hset("session:" + sessionId, "selectedIdp", "https://some-idp-entity-id");
         redisClient.hset("session:" + sessionId, "requestId", "some-request-id");

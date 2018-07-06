@@ -40,7 +40,7 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
 
     @Test
     public void selectIdpShouldReturnSuccessResponseAndAudit() {
-        redisClient.set("state:some-session-id", VerifySessionState.Started.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.Started.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
         configureFor(configPort());
         stubFor(
@@ -58,7 +58,7 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
 
     @Test
     public void idpSelectedShouldThrowIfIdpIsNotAvailable() {
-        redisClient.set("state:some-session-id", VerifySessionState.Started.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.Started.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
         configureFor(configPort());
         stubFor(
@@ -73,7 +73,7 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
 
     @Test
     public void idpSelectedShouldThrowIfSessionInWrongState() {
-        redisClient.set("state:some-session-id", VerifySessionState.Match.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.Match.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
         configureFor(configPort());
         stubFor(
@@ -85,12 +85,12 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
         assertThat(response.getStatus()).isEqualTo(400);
         var error = response.readEntity(new GenericType<Map<String, String>>() { });
         assertThat(error.get("exceptionType")).isEqualTo("STATE_PROCESSING_VALIDATION");
-        assertThat(error.get("clientMessage")).isEqualTo("Invalid transition 'selectIdp' for state 'match'");
+        assertThat(error.get("clientMessage")).isEqualTo("Invalid transition 'selectIdp' for state 'Match'");
     }
 
     @Test
     public void tryAnotherIdpShouldReturnSuccess() {
-        redisClient.set("state:some-session-id", VerifySessionState.AuthnFailed.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.AuthnFailed.class.getSimpleName());
         var url = String.format("http://localhost:%d/policy/received-authn-request/%s/try-another-idp", verifyControl.getLocalPort(), "some-session-id");
         var response = httpClient.target(url).request(MediaType.APPLICATION_JSON_TYPE).post(null);
 
@@ -100,7 +100,7 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
 
     @Test
     public void getSignInProcessDtoShouldReturnSignInDetailsDto() {
-        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
         configureFor(configPort());
@@ -121,7 +121,7 @@ public class AuthnRequestFromTransactionResourceIntegrationTest extends BaseVeri
 
     @Test
     public void getRequestIssuerIdShouldReturnRequestIssuerId() {
-        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.IdpSelected.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
         Response response = getRequestIssuerId("some-session-id");
         assertThat(response.getStatus()).isEqualTo(200);

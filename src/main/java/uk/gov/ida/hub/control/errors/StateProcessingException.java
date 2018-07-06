@@ -19,7 +19,7 @@ public class StateProcessingException extends RuntimeException {
         @Override
         public Response toResponse(StateProcessingException exception) {
             var errorId = UUID.randomUUID();
-            String clientMessage = "Invalid transition '" + exception.transitionName + "' for state '" + exception.state.getName() + "'";
+            String clientMessage = "Invalid transition '" + exception.transitionName + "' for state '" + exception.state.getClass().getSimpleName() + "'";
             LOG.error(clientMessage, exception);
             return Response
                 .status(400)

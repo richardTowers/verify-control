@@ -19,7 +19,7 @@ public class EntityNotEnabledException extends RuntimeException {
         @Override
         public Response toResponse(EntityNotEnabledException exception) {
             var errorId = UUID.randomUUID();
-            String clientMessage = "Entity '" + exception.entityId + "' is not enabled for this session. In state '" + exception.state.getName() + "'";
+            String clientMessage = "Entity '" + exception.entityId + "' is not enabled for this session. In state '" + exception.state.getClass().getSimpleName() + "'";
             LOG.error(clientMessage, exception);
             return Response
                 .status(400)

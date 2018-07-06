@@ -43,7 +43,7 @@ public class SessionClient {
 
     public void setState(String sessionId, VerifySessionState state) throws SessionNotFoundException {
         checkSessionExists(sessionId);
-        redisClient.set(stateKey(sessionId), state.getName());
+        redisClient.set(stateKey(sessionId), state.getClass().getSimpleName());
     }
 
     private String sessionKey(String sessionId) {

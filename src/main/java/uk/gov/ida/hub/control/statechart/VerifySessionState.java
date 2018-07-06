@@ -22,118 +22,72 @@ public interface VerifySessionState {
     default UserAccountCreated             userAccountCreationSucceeded()   { throw new StateProcessingException("userAccountCreationSucceeded"  , this); }
 
     // Methods
-    String getName();
     default MatchingStage getMatchingStage() { throw new StateProcessingException("getMatchingStage", this); }
     default ResponseProcessingStage getResponseProcessingStage() { throw new StateProcessingException("getResponseProcessingStage", this); }
 
     // States
-    @State(name = Started.NAME, initial = true)
+    @State(name = "started", initial = true)
     final class Started implements VerifySessionState {
-        public static final String NAME = "started";
-
         @Override @Transition public IdpSelected selectIdp() { return new IdpSelected(); }
-
-        @Override public String getName() { return NAME; }
     }
 
-    @State(name = IdpSelected.NAME)
+    @State(name = "idpSelected")
     final class IdpSelected implements VerifySessionState {
-        public static final String NAME = "idpSelected";
-
         @Transition @Override public AuthnFailed   authenticationFailed()    { return new AuthnFailed();                }
         @Transition @Override public FraudResponse fraudResponse()           { return new FraudResponse();              }
         @Transition @Override public Matching      authenticationSucceeded() { return new Cycle0And1MatchRequestSent(); }
-
-        @Override public String getName() { return NAME; }
     }
 
-    @State(name = AuthnFailed.NAME)
+    @State(name = "authnFailed")
     final class AuthnFailed implements VerifySessionState {
-        public static final String NAME = "authnFailed";
-
         @Transition @Override public IdpSelected selectIdp() { return new IdpSelected(); }
-
-        @Override public String getName() { return NAME; }
     }
 
-    @State(name = FraudResponse.NAME)
-    final class FraudResponse implements VerifySessionState {
-        public static final String NAME = "fraudResponse";
+    @State(name = "fraudResponse")
+    final class FraudResponse implements VerifySessionState { }
 
-        @Override public String getName() { return NAME; }
-    }
+    @State(name = "matching")
+    abstract class Matching implements VerifySessionState { }
 
-    @State(name = Matching.NAME)
-    abstract class Matching implements VerifySessionState {
-        static final String NAME = "matching";
-
-        @Override public String getName() { return NAME; }
-    }
-
-    @State(name = Cycle0And1MatchRequestSent.NAME, initial = true)
+    @State(name = "cycle0And1MatchRequestSent", initial = true)
     final class Cycle0And1MatchRequestSent extends Matching {
-        public static final String NAME = "cycle0And1MatchRequestSent";
-
         @Transition @Override public Match                          match()                          { return new Match();                          }
         @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
         @Transition @Override public AwaitingCycle3Data             awaitCycle3Data()                { return new AwaitingCycle3Data();             }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
-        @Override public String getName() { return NAME; }
         @Override public MatchingStage getMatchingStage() { return MatchingStage.CYCLE_0_AND_1; }
     }
 
-    @State(name = AwaitingCycle3Data.NAME)
+    @State(name = "awaitingCycle3Data")
     final class AwaitingCycle3Data extends Matching {
-        public static final String NAME = "awaitingCycle3Data";
-
         @Transition @Override public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
         @Transition @Override public MatchingFailed         cancelCycle3Request() { return new MatchingFailed();         }
-
-        @Override public String getName() { return NAME; }
     }
 
-    @State(name = Match.NAME)
-    final class Match implements VerifySessionState {
-        public static final String NAME = "match";
+    @State(name = "match")
+    final class Match implements VerifySessionState { }
 
-        @Override public String getName() { return NAME; }
-    }
-
-    @State(name = Cycle3MatchRequestSent.NAME)
+    @State(name = "cycle3MatchRequestSent")
     final class Cycle3MatchRequestSent extends Matching {
-        public static final String NAME = "cycle3MatchRequestSent";
-
         @Transition @Override public Match                          match()                          { return new Match();                          }
         @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
-        @Override public String getName() { return NAME; }
         @Override public MatchingStage getMatchingStage() { return MatchingStage.CYCLE_3; }
     }
 
-    @State(name = UserAccountCreationRequestSent.NAME)
+    @State(name = "userAccountCreationRequestSent")
     final class UserAccountCreationRequestSent extends Matching {
-        public static final String NAME = "userAccountCreationRequestSent";
-
         @Transition @Override public MatchingFailed     userAccountCreationFailed()    { return new MatchingFailed();     }
         @Transition @Override public UserAccountCreated userAccountCreationSucceeded() { return new UserAccountCreated(); }
-
-        @Override public String getName() { return NAME; }
     }
 
-    @State(name = UserAccountCreated.NAME)
+    @State(name = "userAccountCreated")
     final class UserAccountCreated extends Matching {
-        public static final String NAME = "userAccountCreated";
-
-        @Override public String getName() { return NAME; }
         @Override public ResponseProcessingStage getResponseProcessingStage() { return ResponseProcessingStage.USER_ACCOUNT_CREATED; }
     }
 
-    @State(name = MatchingFailed.NAME)
-    final class MatchingFailed extends Matching {
-        public static final String NAME = "matchingFailed";
-
-        @Override public String getName() { return NAME; }
-    }
+    @State(name = "matchingFailed")
+    final class MatchingFailed extends Matching { }
 }

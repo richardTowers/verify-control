@@ -22,7 +22,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
 
     @Test
     public void shouldReturnOkWhenASuccessMatchingServiceResponseIsReceived() {
-        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
         configureFor(samlEnginePort());
@@ -40,7 +40,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
             .invoke();
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Match.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.Match.class.getSimpleName());
     }
 
     @Ignore
@@ -72,7 +72,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
     @Test
     public void fullSuccessfulJourneyThroughAllStates() {
         // TODO: get rid of these and initialise the session by calling the API
-        redisClient.set("state:some-session-id", VerifySessionState.Started.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.Started.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
         redisClient.hset("session:some-session-id", "isRegistration", "true");
         redisClient.hset("session:some-session-id", "requestId", "some-request-id");
@@ -92,7 +92,7 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
             .get();
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.UserAccountCreated.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.UserAccountCreated.class.getSimpleName());
     }
 
     @Ignore
@@ -103,13 +103,13 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
 
     @Test
     public void responseProcessingDetailsShouldReturnWaitingForC3StatusWhenNoMatchResponseSentFromMatchingServiceAndC3Required() {
-        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.NAME);
+        redisClient.set("state:some-session-id", VerifySessionState.Cycle0And1MatchRequestSent.class.getSimpleName());
         redisClient.hset("session:some-session-id", "issuer", "https://some-service-entity-id");
 
         var response = aNoMatchResponseWasReceivedFromTheMSA();
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.NAME);
+        assertThat(redisClient.get("state:some-session-id")).isEqualTo(VerifySessionState.AwaitingCycle3Data.class.getSimpleName());
         var responseBody = response.readEntity(new GenericType<Map<String, String>>() { });
         assertThat(responseBody).contains(
             new AbstractMap.SimpleEntry<>("responseProcessingStatus", "GET_C3_DATA"),
