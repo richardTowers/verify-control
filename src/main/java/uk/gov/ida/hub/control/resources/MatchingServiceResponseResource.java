@@ -8,8 +8,6 @@ import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
 import uk.gov.ida.hub.control.errors.ApiBadRequestException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
-import uk.gov.ida.hub.control.errors.StateProcessingException;
-import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -53,15 +51,16 @@ public class MatchingServiceResponseResource {
             case "MatchingServiceMatch":
                 return handleMatchResponse(sessionClient, sessionId);
             case "NoMatchingServiceMatchFromMatchingService":
-                switch (state.getName()) {
-                    case VerifySessionState.Cycle0And1MatchRequestSent.NAME:
+                var matchingStage = state.getMatchingStage();
+                switch (matchingStage) {
+                    case CYCLE_0_AND_1:
                         if (true) { // TODO if cycle 3 is configured too
                             return handleAwaitCycle3Data(sessionClient, sessionId);
                         }
                         else {
                             throw new NotImplementedException("No match for cycle 0 and 1"); // TODO
                         }
-                    case VerifySessionState.Cycle3MatchRequestSent.NAME:
+                    case CYCLE_3:
                         if (true) { // TODO if user account creation is enabled
                             return handleUserAccountCreationRequest(sessionClient, configServiceClient, samlSoapProxyClient, sessionId);
                         }
@@ -69,7 +68,7 @@ public class MatchingServiceResponseResource {
                             throw new NotImplementedException("No match for cycle 3 - user account creation disabled"); // TODO
                         }
                     default:
-                        throw new StateProcessingException("NoMatchingServiceMatchFromMatchingService", state);
+                        throw new NotImplementedException("Matching stage " + matchingStage + " has not been implemented");
                 }
             case "UserAccountCreated":
                 return handleUserAccountCreated(sessionClient, sessionId);

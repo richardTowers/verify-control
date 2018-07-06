@@ -1,5 +1,6 @@
 package uk.gov.ida.hub.control.statechart;
 
+import uk.gov.ida.hub.control.data.MatchingStage;
 import uk.gov.ida.hub.control.errors.StateProcessingException;
 import uk.gov.ida.hub.control.statechart.annotations.State;
 import uk.gov.ida.hub.control.statechart.annotations.Transition;
@@ -21,6 +22,7 @@ public interface VerifySessionState {
 
     // Methods
     String getName();
+    default MatchingStage getMatchingStage() { throw new StateProcessingException("getMatchingStage", this); }
 
     // States
     @State(name = Started.NAME, initial = true)
@@ -77,6 +79,8 @@ public interface VerifySessionState {
         @Transition @Override public AwaitingCycle3Data             awaitCycle3Data()                { return new AwaitingCycle3Data();             }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
+        @Override public MatchingStage getMatchingStage() { return MatchingStage.CYCLE_0_AND_1; }
+
         @Override
         public String getName() { return NAME; }
     }
@@ -105,6 +109,8 @@ public interface VerifySessionState {
         @Transition @Override public Match                          match()                          { return new Match();                          }
         @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
+
+        @Override public MatchingStage getMatchingStage() { return MatchingStage.CYCLE_3; }
 
         @Override public String getName() { return NAME; }
     }
