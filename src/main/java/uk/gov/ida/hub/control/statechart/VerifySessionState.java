@@ -81,6 +81,7 @@ public interface VerifySessionState {
     final class UserAccountCreationRequestSent extends Matching {
         @Transition @Override public MatchingFailed     userAccountCreationFailed()    { return new MatchingFailed();     }
         @Transition @Override public UserAccountCreated userAccountCreationSucceeded() { return new UserAccountCreated(); }
+        @Override public ResponseProcessingStage getResponseProcessingStage() { return ResponseProcessingStage.USER_ACCOUNT_CREATION_REQUEST_SENT; }
     }
 
     @State(name = "userAccountCreated")

@@ -37,8 +37,14 @@ public class ResponseFromIdpResource {
                     "responseProcessingStatus", "SEND_USER_ACCOUNT_CREATED_RESPONSE_TO_TRANSACTION",
                     "transactionEntityId", issuer
                 )).build();
+            case USER_ACCOUNT_CREATION_REQUEST_SENT:
+                return Response.ok(mapOf(
+                    "sessionId", sessionId,
+                    "responseProcessingStatus", "WAIT",
+                    "transactionEntityId", issuer
+                )).build();
             default:
-                throw new NotImplementedException("Response processing stage ", responseProcessingStage + " has not been implemented.");
+                throw new NotImplementedException("Response processing stage " + responseProcessingStage + " has not been implemented.");
         }
     }
 }

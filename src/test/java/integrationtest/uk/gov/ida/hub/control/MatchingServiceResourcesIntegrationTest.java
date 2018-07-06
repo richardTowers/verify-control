@@ -62,10 +62,27 @@ public class MatchingServiceResourcesIntegrationTest extends BaseVerifyControlIn
     public void responseFromMatchingServiceShouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle3MatchRequest() {
         throw new NotImplementedException("Test responseFromMatchingServiceShouldThrowExceptionWhenInResponseToDoesNotMatchFromCycle3MatchRequest has not been implemented");
     }
-    @Ignore
+
     @Test
     public void responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3EnabledUserAccountCreationAttributesAreFetched() {
-        throw new NotImplementedException("Test responseProcessingDetailsShouldReturnSuccessResponseWhenNoMatchWithC3EnabledUserAccountCreationAttributesAreFetched has not been implemented");
+        var sessionId = aSessionIsCreated();
+        anIdpIsSelectedForRegistration(sessionId);
+        anIdpAuthnRequestWasGenerated(sessionId);
+        anAuthnResponseFromIdpWasReceivedAndMatchingRequestSent(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+        aCycle3AttributeHasBeenSentToPolicyFromTheUser(sessionId);
+        aNoMatchResponseWasReceivedFromTheMSA(sessionId);
+
+        Response response = httpClient
+            .target(String.format("http://localhost:%d/policy/received-authn-request/%s/response-from-idp/response-processing-details", verifyControl.getLocalPort(), sessionId))
+            .request(APPLICATION_JSON_TYPE)
+            .get();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(redisClient.get("state:" + sessionId)).isEqualTo(VerifySessionState.UserAccountCreationRequestSent.class.getSimpleName());
+        var responseBody = response.readEntity(new GenericType<Map<String, String>>() { });
+        assertThat(responseBody.get("responseProcessingStatus")).isEqualTo("WAIT");
+        assertThat(responseBody.get("sessionId")).isEqualTo(sessionId);
     }
     @Ignore
     @Test
