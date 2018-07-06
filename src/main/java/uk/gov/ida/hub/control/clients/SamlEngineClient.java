@@ -1,7 +1,7 @@
 package uk.gov.ida.hub.control.clients;
 
 import com.google.common.collect.ImmutableList;
-import uk.gov.ida.hub.control.dtos.samlengine.SamlRequestDto;
+import uk.gov.ida.hub.control.data.samlengine.SamlRequestDto;
 import uk.gov.ida.hub.control.errors.ApiBadRequestException;
 
 import javax.ws.rs.client.WebTarget;

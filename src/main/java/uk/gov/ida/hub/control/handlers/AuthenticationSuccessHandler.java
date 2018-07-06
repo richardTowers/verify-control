@@ -3,7 +3,7 @@ package uk.gov.ida.hub.control.handlers;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SamlSoapProxyClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
-import uk.gov.ida.hub.control.dtos.LevelOfAssurance;
+import uk.gov.ida.hub.control.data.LevelOfAssurance;
 import uk.gov.ida.hub.control.errors.ConditionNotMetException;
 import uk.gov.ida.hub.control.errors.IdpDisabledException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;

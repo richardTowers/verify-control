@@ -3,7 +3,7 @@ package uk.gov.ida.hub.control.resources;
 import com.codahale.metrics.annotation.Timed;
 import uk.gov.ida.hub.control.clients.ConfigServiceClient;
 import uk.gov.ida.hub.control.clients.SessionClient;
-import uk.gov.ida.hub.control.dtos.SelectIdpDto;
+import uk.gov.ida.hub.control.data.SelectIdpDto;
 import uk.gov.ida.hub.control.errors.EntityNotEnabledException;
 import uk.gov.ida.hub.control.errors.SessionNotFoundException;
 

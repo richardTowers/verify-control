@@ -1,4 +1,4 @@
-package uk.gov.ida.hub.control.dtos.samlengine;
+package uk.gov.ida.hub.control.data.samlengine;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

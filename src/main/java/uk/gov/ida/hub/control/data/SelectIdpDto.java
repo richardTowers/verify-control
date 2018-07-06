@@ -1,4 +1,4 @@
-package uk.gov.ida.hub.control.dtos;
+package uk.gov.ida.hub.control.data;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

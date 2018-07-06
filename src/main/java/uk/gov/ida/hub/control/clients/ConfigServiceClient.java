@@ -1,6 +1,6 @@
 package uk.gov.ida.hub.control.clients;
 
-import uk.gov.ida.hub.control.dtos.LevelOfAssurance;
+import uk.gov.ida.hub.control.data.LevelOfAssurance;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
