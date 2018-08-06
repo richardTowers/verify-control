@@ -58,6 +58,6 @@ public class Cycle3DataResource {
     @Timed
     public void cancelCycle3(@PathParam("sessionId") String sessionId, Map<String, String> cycle3UserInput) throws SessionNotFoundException {
         VerifySessionState state = sessionClient.getState(sessionId);
-        sessionClient.setState(sessionId, state.cancelCycle3Request());
+        sessionClient.setState(sessionId, state.noMatch());
     }
 }

@@ -62,7 +62,7 @@ public class UserAccountCreationHandler {
 
     public static Response handleUserAccountCreationFailed(SessionClient sessionClient, String sessionId) throws SessionNotFoundException {
         var state = sessionClient.getState(sessionId);
-        var newState = state.userAccountCreationFailed();
+        var newState = state.noMatch();
 
         // TODO do we need any side effects here?
 

@@ -14,11 +14,9 @@ public interface VerifySessionState {
     default Matching                       authenticationSucceeded()        { throw new StateProcessingException("authenticationSucceeded"       , this); }
     default AwaitingCycle3Data             awaitCycle3Data()                { throw new StateProcessingException("awaitCycle3Data"               , this); }
     default Cycle3MatchRequestSent         submitCycle3Request()            { throw new StateProcessingException("submitCycle3Request"           , this); }
-    default MatchingFailed                 cancelCycle3Request()            { throw new StateProcessingException("cancelCycle3Request"           , this); }
     default Match                          match()                          { throw new StateProcessingException("match"                         , this); }
     default MatchingFailed                 noMatch()                        { throw new StateProcessingException("noMatch"                       , this); }
     default UserAccountCreationRequestSent sendUserAccountCreationRequest() { throw new StateProcessingException("sendUserAccountCreationRequest", this); }
-    default MatchingFailed                 userAccountCreationFailed()      { throw new StateProcessingException("userAccountCreationFailed"     , this); }
     default UserAccountCreated             userAccountCreationSucceeded()   { throw new StateProcessingException("userAccountCreationSucceeded"  , this); }
 
     // Methods
@@ -47,12 +45,13 @@ public interface VerifySessionState {
     final class FraudResponse implements VerifySessionState { }
 
     @State(name = "matching")
-    abstract class Matching implements VerifySessionState { }
+    abstract class Matching implements VerifySessionState {
+        @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
+    }
 
     @State(name = "cycle0And1MatchRequestSent", initial = true)
     final class Cycle0And1MatchRequestSent extends Matching {
         @Transition @Override public Match                          match()                          { return new Match();                          }
-        @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
         @Transition @Override public AwaitingCycle3Data             awaitCycle3Data()                { return new AwaitingCycle3Data();             }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
@@ -62,7 +61,6 @@ public interface VerifySessionState {
     @State(name = "awaitingCycle3Data")
     final class AwaitingCycle3Data extends Matching {
         @Transition @Override public Cycle3MatchRequestSent submitCycle3Request() { return new Cycle3MatchRequestSent(); }
-        @Transition @Override public MatchingFailed         cancelCycle3Request() { return new MatchingFailed();         }
     }
 
     @State(name = "match")
@@ -71,7 +69,6 @@ public interface VerifySessionState {
     @State(name = "cycle3MatchRequestSent")
     final class Cycle3MatchRequestSent extends Matching {
         @Transition @Override public Match                          match()                          { return new Match();                          }
-        @Transition @Override public MatchingFailed                 noMatch()                        { return new MatchingFailed();                 }
         @Transition @Override public UserAccountCreationRequestSent sendUserAccountCreationRequest() { return new UserAccountCreationRequestSent(); }
 
         @Override public MatchingStage getMatchingStage() { return MatchingStage.CYCLE_3; }
@@ -79,18 +76,17 @@ public interface VerifySessionState {
 
     @State(name = "userAccountCreationRequestSent")
     final class UserAccountCreationRequestSent extends Matching {
-        @Transition @Override public MatchingFailed     userAccountCreationFailed()    { return new MatchingFailed();     }
         @Transition @Override public UserAccountCreated userAccountCreationSucceeded() { return new UserAccountCreated(); }
         @Override public ResponseProcessingStage getResponseProcessingStage() { return ResponseProcessingStage.USER_ACCOUNT_CREATION_REQUEST_SENT; }
     }
 
     @State(name = "userAccountCreated")
-    final class UserAccountCreated extends Matching {
+    final class UserAccountCreated implements VerifySessionState {
         @Override public ResponseProcessingStage getResponseProcessingStage() { return ResponseProcessingStage.USER_ACCOUNT_CREATED; }
     }
 
     @State(name = "matchingFailed")
-    final class MatchingFailed extends Matching {
+    final class MatchingFailed implements VerifySessionState {
         @Override public ResponseProcessingStage getResponseProcessingStage() { return ResponseProcessingStage.MATCHING_FAILED; }
     }
 }

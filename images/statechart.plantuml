@@ -1,0 +1,22 @@
+@startuml
+skinparam monochrome true
+skinparam defaultFontName Courier
+skinparam Shadowing false
+[*] --> started
+started --> idpSelected: selectIdp
+authnFailed --> idpSelected: selectIdp
+idpSelected --> matching: authenticationSucceeded
+idpSelected --> authnFailed: authenticationFailed
+idpSelected --> fraudResponse: fraudResponse
+state matching {
+  [*] --> cycle0And1MatchRequestSent
+  cycle0And1MatchRequestSent --> awaitingCycle3Data: awaitCycle3Data
+  cycle0And1MatchRequestSent --> userAccountCreationRequestSent: sendUserAccountCreationRequest
+  cycle3MatchRequestSent --> userAccountCreationRequestSent: sendUserAccountCreationRequest
+  awaitingCycle3Data --> cycle3MatchRequestSent: submitCycle3Request
+}
+cycle0And1MatchRequestSent --> match: match
+cycle3MatchRequestSent --> match: match
+userAccountCreationRequestSent --> userAccountCreated: userAccountCreationSucceeded
+matching --> matchingFailed: noMatch
+@enduml

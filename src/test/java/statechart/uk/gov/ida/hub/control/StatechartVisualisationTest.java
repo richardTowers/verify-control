@@ -3,11 +3,13 @@ package statechart.uk.gov.ida.hub.control;
 import net.sourceforge.plantuml.FileFormat;
 import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.SourceStringReader;
+import org.apache.commons.codec.CharEncoding;
 import org.junit.Test;
 import uk.gov.ida.hub.control.statechart.VerifySessionState;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -33,10 +35,17 @@ public class StatechartVisualisationTest {
             VerifySessionState.UserAccountCreated.class,
             VerifySessionState.Match.class);
 
-        String result = PlantUmlPrinter.printPlantUml(stateHierarchy);
-        String imagePath = "./images/statechart.svg";
+        var result = PlantUmlPrinter.printPlantUml(stateHierarchy);
+        var umlPath = "./images/statechart.plantuml";
+        try (var stream = new BufferedOutputStream(Files.newOutputStream(Paths.get(umlPath), CREATE, TRUNCATE_EXISTING))) {
+            stream.write(result.getBytes(Charset.forName(CharEncoding.UTF_8)));
+        } catch (IOException e) {
+            fail("Could not write statechart source to '" + umlPath + "'");
+        }
+        var imagePath = "./images/statechart.svg";
         try (var stream = new BufferedOutputStream(Files.newOutputStream(Paths.get(imagePath), CREATE, TRUNCATE_EXISTING))) {
-            new SourceStringReader(result).generateImage(stream, new FileFormatOption(FileFormat.SVG));
+            SourceStringReader sourceStringReader = new SourceStringReader(result);
+            sourceStringReader.generateImage(stream, new FileFormatOption(FileFormat.SVG));
         } catch (IOException e) {
             fail("Could not write statechart image to '" + imagePath + "'");
         } catch (Exception e) {
